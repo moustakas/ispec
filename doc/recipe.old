@@ -1,0 +1,62 @@
+\documentclass[12pt]{article}
+
+\def\bli{\begin{enumerate}}
+\def\eli{\end{enumerate}}
+
+\begin{document}
+\pagestyle{plain}
+
+\centerline{{\bf {\Large RKSPEC Recipe}}}
+\vspace{0.2in}
+\centerline{{\large J. Moustakas}}
+\centerline{August 2001}
+\vspace{0.3in}
+
+\bli
+
+\item[1.0]{Initial processing}
+
+\bli
+	\item[1.2]{Measure the gain and the read noise.}
+	\item[1.1]{Create a master bias frame and a master dome flat.}	
+\eli
+
+\item[2.0]{Extract calibration data}
+
+\bli
+	\item[2.1]{Derive a master flat field and illumination
+	correction interactively using {\tt RKCCDPROC}.}
+	\item[2.2]{Select an arc calibration lamp.  Run {\tt
+	RK\_ARCFIT} to determine and write out the two-dimensional
+	wavelength solution.}
+	\item[2.3]{Select a list of standard stars and object and sky
+	apertures.  {\tt RK\_SENSFUNC} will extract sky-subtracted
+	stellar spectra and will derive a sensitivity function
+	interactively.} 
+\eli
+
+\item[3.0]{Calibrate the data and extract one-dimensional spectra}
+
+\bli
+	\item[3.1]{Select a list of objects.  Run {\tt RKCCDPROC} to
+	check and update the headers, trim, overscan-subtract,
+	bias-subtract, and flat-field.} 
+	\item[3.2]{Run {\tt RK\_CALIB} to:}
+\bli
+	\item[3.2.1]{Refine the wavelength solution using many night
+	sky lines.}
+	\item[3.2.2]{Flux-calibrate each row based on the
+	two-dimensional wavelength-to-pixel map and the sensitivity
+	function using {\tt RK\_FLUXCALIB}.}
+	\item[3.2.3]{Flag and interpolate over cosmic rays and bad
+	pixels and columns for aesthetic purposes.}
+	\item[3.2.4]{Extract one-dimensional sky-subtracted,
+	flux-calibrated spectra and variance spectra.}
+	\item[3.2.5]{Write out flux-calibrated and cleaned
+	two-dimensional images, variance maps and bad pixel masks.}
+\eli
+\eli
+
+\eli
+
+\end{document}

@@ -1,0 +1,48 @@
+---------------------------------------------------------------------------
+Date: Tue, 8 Nov 2005 12:32:14 +0100
+From: Bo Milvang-Jensen <milvang@mpe.mpg.de>
+To: John Moustakas <ioannis@as.arizona.edu>
+Subject: Re: FITS extension
+
+Hi John,
+
+> The wavelength vector can be recovered from the header information
+> (FITS standard).
+
+Just a quick comment on that just FYI: The wavelength WCS is found in the
+header of "extension 0" only, so at least from IRAFs point of view, there
+is only a wavelength WCS for "extension 0", not for extension 1, 2, 3.
+I.e., if you use splot
+
+    splot wsra.mos_ltt7379_center_1_010.ms.fits[0]
+    splot wsra.mos_ltt7379_center_1_010.ms.fits[1]
+    splot wsra.mos_ltt7379_center_1_010.ms.fits[2]
+    splot wsra.mos_ltt7379_center_1_010.ms.fits[3]
+
+it is only for [0] that the wavelength axis is shown.
+
+For our purpose this is fine since we'll only be using ext. 0, and otherwise
+we could just copy the WCS from ext. 0 to e.g. ext. 1, but you may consider
+writing the WCS to all extensions in the future.
+
+Cheers, Bo
+---------------------------------------------------------------------------
+* jm05jun17uofa - ICRCOMBINE does not properly average "time"
+  measurements such as UT, LST, JD, and MJD
+---------------------------------------------------------------------------
+* jm05jun27uofa - occasionally, ISKYSUBTRACT2D returns a
+  "divide-by-zero" error, which is probably caused by BSPLINE_ITERFIT().
+  Add a flag to capture this occurance.
+---------------------------------------------------------------------------
+* Solve for the atmospheric extinction as part of making the
+  sensitivity function.
+---------------------------------------------------------------------------
+* Verify the noise calculation in ISKYSUBTRACT2D()
+---------------------------------------------------------------------------
+* Add a GNU license statement in every program
+---------------------------------------------------------------------------
+* ICCDPRC: (1) properly implement dark subtraction; (2) add support
+  for SATURATE keyword (must also be supported in IBATCH)
+---------------------------------------------------------------------------
+* document ISPEC_WEBPAGE
+---------------------------------------------------------------------------

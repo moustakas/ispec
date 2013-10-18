@@ -1,0 +1,48 @@
+# J. Moustakas, 2004 June 21, U of A
+# 
+# Helium (He) Line List
+#
+# CRC Handbook of Chemistry & Physics 84th Edition 2003-2004
+# http://www.hbcpnetbase.com, Section 10, "Line Spectra of the Elements" 
+#
+# (1) Wavelength [Angstroms in air]; (2) Intensity;
+# (3) Quality [GOOD/BLEND/BAD]; (4) Element and Ionization State
+#
+3013.7 		40 	GOOD	HeI
+3187.74 	20 	GOOD	HeI
+3203.10 	15 	GOOD	HeII
+3888.65 	500 	GOOD	HeI
+3964.729	20 	GOOD	HeI
+4026.191	50 	BLEND	HeI  # blended with 4026.36
+4120.82 	12 	BLEND	HeI  # blended with 4120.99
+4471.479	200 	BLEND	HeI  # blended with 4471.68
+4471.68 	25 	BLEND	HeI  # blended with 4471.479
+4685.7 		30 	GOOD	HeII
+4713.146	30 	BLEND	HeI  # blended with 4713.38
+4921.931	20 	GOOD	HeI
+5015.678	100 	GOOD	HeI
+5852.488        100     GOOD    He   # added jm04nov08uofa
+5875.62 	500 	GOOD	HeI  # blended with 5875.97 (keep anyway)
+5875.97 	100 	GOOD	HeI
+6266.495	100	GOOD	He   # added jm04nov08uofa
+6678.15 	100 	GOOD	HeI
+7065.19 	200 	BLEND	HeI  # blended with 7065.71
+7065.71 	30 	BLEND	HeI  # blended with 7065.19
+7281.35 	50 	GOOD	HeI
+10123.6 	15 	GOOD	HeII
+10829.09	300 	GOOD	HeI
+10830.25	1000 	BLEND	HeI  # blended with 10830.34
+10830.34	2000 	BLEND	HeI  # blended with 10830.25
+11969.12	30 	GOOD	HeI
+12527.52	20 	GOOD	HeI
+12784.99	50 	GOOD	HeI
+12790.57	20 	GOOD	HeI
+15083.64	12 	GOOD	HeI
+17002.47	200 	GOOD	HeI
+18685.34	500 	GOOD	HeI
+18697.23	200 	GOOD	HeI
+19089.38	100 	GOOD	HeI
+19543.08	20 	GOOD	HeI
+20581.30	1000 	GOOD	HeI
+21120.07	80 	GOOD	HeI
+21132.03	20 	GOOD	HeI

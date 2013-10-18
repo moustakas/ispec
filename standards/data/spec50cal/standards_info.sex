@@ -1,0 +1,37 @@
+## PG0934554 has been excluded because there are no data between
+## 5281-5541 Angstroms.
+## 
+## spec50cal_pg0934554.dat  PG0934+554  09:38:19.90 +55:05:53.0  11.90  12.16   spec50cal   lightcyan
+##
+# 1 FILE
+# 2 STAR
+# 3 RA [J2000]
+# 4 DEC [J2000]
+# 5 B
+# 6 V
+# 7 STARPATH
+# 8 STARCOLOR
+spec50cal_pg0205134.dat  PG0205+134  02:08:03.50 +13:36:31.0  14.68  14.73   spec50cal   almond
+spec50cal_pg0216032.dat  PG0216+032  02:19:19.00 +03:26:54.0  14.31  14.56   spec50cal   bisque
+spec50cal_pg0310149.dat  PG0310+149  03:13:37.00 +15:06:24.0  15.43  15.50   spec50cal   moccasin
+spec50cal_hz14.dat       HZ14        04:41:01.00 +10:59:42.0  13.68  13.83   spec50cal   darkkhaki
+spec50cal_g191b2b.dat    G191B2B     05:05:30.61 +52:49:51.9  11.48  11.80   spec50cal   blue
+spec50cal_hilt600.dat    HILTNER600  06:45:12.00 +02:08:00.0  10.63  10.45   spec50cal   orange
+spec50cal_pg0823546.dat  PG0823+546  08:26:50.40 +54:28:06.0 -999.0 -999.0   spec50cal   burlywood
+spec50cal_pg0846249.dat  PG0846+249  08:49:06.00 +24:48:00.0 -999.0 -999.0   spec50cal   lavender
+spec50cal_pg0939262.dat  PG0939+262  09:42:54.00 +26:00:00.0  14.38  14.66   spec50cal   powderblue
+spec50cal_feige34.dat    FEIGE34     10:39:36.74 +43:06:09.3  10.93  11.23   spec50cal   green
+spec50cal_pg1121145.dat  PG1121+145  11:24:15.90 +14:13:49.0  16.41  16.63   spec50cal   steelblue
+spec50cal_gd140.dat      GD140       11:37:05.10 +29:47:58.3  12.44  12.50   spec50cal   coral
+spec50cal_eg81.dat       EG81        11:37:26.38 +14:10:14.1  12.95  13.21   spec50cal   olive
+spec50cal_feige66.dat    FEIGE66     12:37:23.52 +25:03:59.9 -999.0 -999.0   spec50cal   violet
+spec50cal_feige67.dat    FEIGE67     12:41:51.79 +17:31:19.8  11.50  11.82   spec50cal   turquoise
+spec50cal_hz44.dat       HZ44        13:23:35.26 +36:07:59.5  11.39  11.68   spec50cal   red
+spec50cal_pg1545035.dat  PG1545+035  15:48:24.30 +03:22:54.0 -999.0 -999.0   spec50cal   dodgerblue
+spec50cal_pg1708602.dat  PG1708+602  17:09:15.90 +60:10:11.0  13.45  13.70   spec50cal   royalblue
+spec50cal_hd192281.dat   HD192281    20:12:33.12 +40:16:05.4   7.93   7.55   spec50cal   lawngreen
+spec50cal_cygob2no9.dat  CYGOB2No.9  20:33:10.68 +41:15:08.5  12.73  10.80   spec50cal   seagreen
+spec50cal_wolf1346.dat   WOLF1346    20:34:21.88 +25:03:49.7  11.47  11.54   spec50cal   skyblue
+spec50cal_bd284211.dat   BD+284211   21:51:11.02 +28:51:50.4  10.19  10.53   spec50cal   honeydew
+spec50cal_hd217086.dat   HD217086    22:56:47.19 +62:43:37.6   8.28   7.64   spec50cal   olivedrab
+spec50cal_feige110.dat   FEIGE110    23:19:58.40 -05:09:56.2  11.18  11.50   spec50cal   yellow

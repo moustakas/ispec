@@ -1,0 +1,437 @@
+;+
+; NAME:
+;       COMPUTE_STELLAR_MASS()
+;
+; PURPOSE:
+;       Compute stellar mass-to-light ratios and stellar masses using
+;       the Bell et al. color-based method. 
+;
+; CALLING SEQUENCE:
+;       stellar_mass = compute_stellar_mass(photo)
+;
+; INPUTS:
+;       photo - photometry
+;
+; OPTIONAL INPUTS:
+;
+;
+; KEYWORD PARAMETERS:
+;
+;
+; OUTPUTS:
+;
+;
+; OPTIONAL OUTPUTS:
+;
+;
+; PROCEDURES USED:
+;
+;
+; COMMENTS:
+;
+;
+; EXAMPLES:
+;
+;
+; MODIFICATION HISTORY:
+;       J. Moustakas, 2004 July 22, U of A
+;       jm04aug01uofa - "correct" the Bell masses by 0.15 for their
+;                       use of a "diet" Salpeter IMF
+;       jm05jan06uofa - separately compute the mass-to-light ratios;
+;                       if synthesized rest-frame magnitudes exist
+;                       (eg., from spectra), then also compute the
+;                       synthesized mass-to-light ratios
+;-
+
+function compute_stellar_mass, photo
+
+    ngalaxy = n_elements(photo)
+    if (ngalaxy eq 0L) then begin
+       print, 'Syntax - mass = compute_stellar_mass(photo)'
+       return, -1L
+    endif
+
+; initialize the output structure    
+
+    stellar_mass = {$
+      ml_ug:               -999.0, $
+      ml_ug_err:           -999.0, $
+      ml_gr:               -999.0, $
+      ml_gr_err:           -999.0, $
+      ml_ri:               -999.0, $
+      ml_ri_err:           -999.0, $
+
+      ml_BV:               -999.0, $
+      ml_BV_err:           -999.0, $
+      ml_VK:               -999.0, $
+      ml_VK_err:           -999.0, $
+      ml_VH:               -999.0, $
+      ml_VH_err:           -999.0, $
+      mass_BV_B:           -999.0, $
+      mass_BV_B_err:       -999.0, $
+      mass_VK_K:           -999.0, $
+      mass_VK_K_err:       -999.0, $
+      mass_VH_H:           -999.0, $
+      mass_VH_H_err:       -999.0, $
+      mass_gr_r:           -999.0, $
+      mass_gr_r_err:       -999.0, $
+      mass_synth_BV_B:     -999.0, $
+      mass_synth_BV_B_err: -999.0, $
+      mass_synth_gr_r:     -999.0, $
+      mass_synth_gr_r_err: -999.0}
+    stellar_mass = replicate(stellar_mass,ngalaxy)
+
+; ###########################################################################    
+; first compute mass-to-light ratios    
+; ###########################################################################    
+
+; ---------------------------------------------------------------------------    
+; (B-V)
+; ---------------------------------------------------------------------------    
+
+    if tag_exist(photo,'B') and tag_exist(photo,'V') then begin
+
+       good = where((photo.B gt -900.0) and (photo.V gt -900.0),ngood)
+
+       if (ngood ne 0L) then begin
+
+          BV = photo[good].B - photo[good].V
+          BV_err = sqrt(photo[good].B_err^2 + photo[good].V_err^2)
+
+          range = where((BV ge min(BV)) and (BV le max(BV)),nrange) ; applicable range
+;         range = where((BV gt 0.1) and (BV lt 1.0),nrange)
+          if (nrange ne 0L) then begin
+
+             c = [-0.942,1.737] ; Bell et al. 2003, Table 7, (B-V), (a_B, b_B)
+
+             ml = 10D0^(c[0] + c[1]*BV[range])
+;            ml = 10D0^(c[0] + c[1]*BV[range] + 0.15) ; NOTE!
+             ml_err = ml * c[1] * BV_err[range] * alog(10.0)
+             
+             stellar_mass[good[range]].ml_BV = ml
+             stellar_mass[good[range]].ml_BV_err = ml_err
+
+          endif
+
+       endif
+       
+    endif
+    
+; ---------------------------------------------------------------------------    
+; (V-K)
+; ---------------------------------------------------------------------------    
+
+    if tag_exist(photo,'V') and tag_exist(photo,'K') then begin
+
+       good = where((photo.V gt -900.0) and (photo.K gt -900.0),ngood)
+
+       if (ngood ne 0L) then begin
+
+          VK = photo[good].V - photo[good].K
+          VK_err = sqrt(photo[good].V_err^2 + photo[good].K_err^2)
+
+          range = where((VK ge min(VK)) and (VK le max(VK)),nrange) ; applicable range
+          if (nrange ne 0L) then begin
+
+             c = [-1.087,0.314] ; Bell & de Jong 2001, Table 4, (V-K), (a_K, b_K)
+
+             ml = 10D0^(c[0] + c[1]*VK[range])
+;            ml = 10D0^(c[0] + c[1]*VK[range] + 0.15) ; NOTE!
+             ml_err = ml * c[1] * VK_err[range] * alog(10.0)
+             
+             stellar_mass[good[range]].ml_VK = ml
+             stellar_mass[good[range]].ml_VK_err = ml_err
+
+          endif
+
+       endif
+       
+    endif
+    
+; ---------------------------------------------------------------------------    
+; (V-H)
+; ---------------------------------------------------------------------------    
+
+    if tag_exist(photo,'V') and tag_exist(photo,'H') then begin
+
+       good = where((photo.V gt -900.0) and (photo.H gt -900.0),ngood)
+
+       if (ngood ne 0L) then begin
+
+          VH = photo[good].V - photo[good].H
+          VH_err = sqrt(photo[good].V_err^2 + photo[good].H_err^2)
+
+          range = where((VH ge min(VH)) and (VH le max(VH)),nrange) ; applicable range
+          if (nrange ne 0L) then begin
+
+             c = [-1.120,0.379] ; Bell & de Jong 2001, Table 4, (V-H), (a_H, b_H)
+
+             ml = 10D0^(c[0] + c[1]*VH[range])
+;            ml = 10D0^(c[0] + c[1]*VH[range] + 0.15) ; NOTE!
+             ml_err = ml * c[1] * VH_err[range] * alog(10.0)
+             
+             stellar_mass[good[range]].ml_VH = ml
+             stellar_mass[good[range]].ml_VH_err = ml_err
+
+          endif
+
+       endif
+       
+    endif
+    
+; ---------------------------------------------------------------------------    
+; (g-r)
+; ---------------------------------------------------------------------------    
+
+    if tag_exist(photo,'SDSS_g') and tag_exist(photo,'SDSS_r') then begin
+
+       good = where((photo.sdss_g gt -900.0) and (photo.sdss_r gt -900.0),ngood)
+
+       if (ngood ne 0L) then begin
+
+          gr = photo[good].sdss_g - photo[good].sdss_r
+          gr_err = sqrt(photo[good].sdss_g_err^2 + photo[good].sdss_r_err^2)
+
+          range = where((gr ge min(gr)) and (gr le max(gr)),nrange) ; applicable range
+          if (nrange ne 0L) then begin
+
+             c = [-0.306,1.097] ; Bell et al. 2003, Table 7, (g-r), (a_r, b_r)
+
+             ml = 10D0^(c[0] + c[1]*gr[range])
+;            ml = 10D0^(c[0] + c[1]*gr[range] + 0.15) ; NOTE!
+             ml_err = ml * c[1] * gr_err[range] * alog(10.0)
+             
+             stellar_mass[good[range]].ml_gr = ml
+             stellar_mass[good[range]].ml_gr_err = ml_err
+
+          endif
+
+       endif
+
+    endif
+       
+; ---------------------------------------------------------------------------    
+; (B-V) [Synthesized]
+; ---------------------------------------------------------------------------    
+
+    if tag_exist(photo,'synth_B_rest') and tag_exist(photo,'synth_V_rest') then begin
+
+       good = where((photo.synth_B_rest gt -900.0) and (photo.synth_V_rest gt -900.0),ngood)
+
+       if (ngood ne 0L) then begin
+
+          BV = photo[good].synth_B_rest - photo[good].synth_V_rest
+          BV_err = sqrt(photo[good].synth_B_rest_err^2 + photo[good].synth_V_rest_err^2)
+
+          range = where((BV ge min(BV)) and (BV le max(BV)),nrange) ; applicable range
+;         range = where((BV gt 0.1) and (BV lt 1.0),nrange)
+          if (nrange ne 0L) then begin
+
+             c = [-0.942,1.737] ; Bell et al. 2003, Table 7, (B-V), (a_B, b_B)
+
+             ml = 10D0^(c[0] + c[1]*BV[range])
+;            ml = 10D0^(c[0] + c[1]*BV[range] + 0.15) ; NOTE!
+             ml_err = ml * c[1] * BV_err[range] * alog(10.0)
+             
+             stellar_mass[good[range]].ml_synth_BV = ml
+             stellar_mass[good[range]].ml_synth_BV_err = ml_err
+
+          endif
+
+       endif
+       
+    endif 
+    
+; ---------------------------------------------------------------------------    
+; (g-r) [Synthesized]
+; ---------------------------------------------------------------------------    
+
+    if tag_exist(photo,'synth_sdss_g_rest') and tag_exist(photo,'synth_sdss_r_rest') then begin
+
+       good = where((photo.synth_sdss_g_rest gt -900.0) and (photo.synth_sdss_r_rest gt -900.0),ngood)
+
+       if (ngood ne 0L) then begin
+
+          gr = photo[good].synth_sdss_g_rest - photo[good].synth_sdss_r_rest
+          gr_err = sqrt(photo[good].synth_sdss_g_rest_err^2 + photo[good].synth_sdss_r_rest_err^2)
+
+          range = where((gr ge min(gr)) and (gr le max(gr)),nrange) ; applicable range
+          if (nrange ne 0L) then begin
+
+             c = [-0.306,1.097] ; Bell et al. 2003, Table 7, (g-r), (a_r, b_r)
+
+             ml = 10D0^(c[0] + c[1]*gr[range])
+;            ml = 10D0^(c[0] + c[1]*gr[range] + 0.15) ; NOTE!
+             ml_err = ml * c[1] * gr_err[range] * alog(10.0)
+             
+             stellar_mass[good[range]].ml_synth_gr = ml
+             stellar_mass[good[range]].ml_synth_gr_err = ml_err
+
+          endif
+
+       endif
+       
+    endif 
+    
+; ###########################################################################    
+; next estimate stellar masses
+; ###########################################################################    
+    
+; ---------------------------------------------------------------------------    
+; (B-V) and B    
+; ---------------------------------------------------------------------------    
+
+    if tag_exist(photo,'B_LUM') then begin
+
+       good = where((stellar_mass.ml_BV gt -900) and (photo.B_lum gt -900.0),ngood)
+
+       if (ngood ne 0L) then begin
+
+          ml = stellar_mass[good].ml_BV
+          ml_err = stellar_mass[good].ml_BV_err
+          
+          B_lum = 10.0^photo[good].B_lum
+          B_lum_err = alog(10.0)*B_lum*photo[good].B_lum_err
+
+          mass = B_lum * ml
+          mass_err = sqrt( (B_lum*ml_err)^2 + (B_lum_err*ml)^2 )
+             
+          stellar_mass[good].mass_BV_B = alog10(mass)
+          stellar_mass[good].mass_BV_B_err = mass_err/mass/alog(10.0)
+
+       endif
+
+    endif
+    
+; ---------------------------------------------------------------------------    
+; (V-K) and K
+; ---------------------------------------------------------------------------    
+
+    if tag_exist(photo,'K_LUM') then begin
+
+       good = where((stellar_mass.ml_VK gt -900) and (photo.K_lum gt -900.0),ngood)
+
+       if (ngood ne 0L) then begin
+
+          ml = stellar_mass[good].ml_VK
+          ml_err = stellar_mass[good].ml_VK_err
+          
+          K_lum = 10.0^photo[good].K_lum
+          K_lum_err = alog(10.0)*K_lum*photo[good].K_lum_err
+
+          mass = K_lum * ml
+          mass_err = sqrt( (K_lum*ml_err)^2 + (K_lum_err*ml)^2 )
+             
+          stellar_mass[good].mass_VK_K = alog10(mass)
+          stellar_mass[good].mass_VK_K_err = mass_err/mass/alog(10.0)
+
+       endif
+
+    endif
+
+; ---------------------------------------------------------------------------    
+; (V-H) and H
+; ---------------------------------------------------------------------------    
+
+    if tag_exist(photo,'H_LUM') then begin
+
+       good = where((stellar_mass.ml_VH gt -900) and (photo.H_lum gt -900.0),ngood)
+
+       if (ngood ne 0L) then begin
+
+          ml = stellar_mass[good].ml_VH
+          ml_err = stellar_mass[good].ml_VH_err
+          
+          H_lum = 10.0^photo[good].H_lum
+          H_lum_err = alog(10.0)*H_lum*photo[good].H_lum_err
+
+          mass = H_lum * ml
+          mass_err = sqrt( (H_lum*ml_err)^2 + (H_lum_err*ml)^2 )
+             
+          stellar_mass[good].mass_VH_H = alog10(mass)
+          stellar_mass[good].mass_VH_H_err = mass_err/mass/alog(10.0)
+
+       endif
+
+    endif
+
+; ---------------------------------------------------------------------------    
+; (g-r) and r    
+; ---------------------------------------------------------------------------    
+
+    if tag_exist(photo,'sdss_r_lum') then begin
+
+       good = where((stellar_mass.ml_gr gt -900) and (photo.sdss_r_lum gt -900.0),ngood)
+
+       if (ngood ne 0L) then begin
+
+          ml = stellar_mass[good].ml_gr
+          ml_err = stellar_mass[good].ml_gr_err
+          
+          r_lum = 10.0^photo[good].r_lum
+          r_lum_err = alog(10.0)*r_lum*photo[good].r_lum_err
+
+          mass = r_lum * ml
+          mass_err = sqrt( (r_lum*ml_err)^2 + (r_lum_err*ml)^2 )
+             
+          stellar_mass[good].mass_gr_r = alog10(mass)
+          stellar_mass[good].mass_gr_r_err = mass_err/mass/alog(10.0)
+
+       endif
+
+    endif
+
+; ---------------------------------------------------------------------------    
+; (B-V) and B [Synthesized Color]
+; ---------------------------------------------------------------------------    
+
+    if tag_exist(photo,'B_LUM') then begin
+
+       good = where((stellar_mass.ml_synth_BV gt -900) and (photo.B_lum gt -900.0),ngood)
+
+       if (ngood ne 0L) then begin
+
+          ml = stellar_mass[good].ml_synth_BV
+          ml_err = stellar_mass[good].ml_synth_BV_err
+          
+          B_lum = 10.0^photo[good].B_lum
+          B_lum_err = alog(10.0)*B_lum*photo[good].B_lum_err
+
+          mass = B_lum * ml
+          mass_err = sqrt( (B_lum*ml_err)^2 + (B_lum_err*ml)^2 )
+             
+          stellar_mass[good].mass_synth_BV_B = alog10(mass)
+          stellar_mass[good].mass_synth_BV_B_err = mass_err/mass/alog(10.0)
+
+       endif
+
+    endif
+    
+; ---------------------------------------------------------------------------    
+; (g-r) and r [Synthesized Color]
+; ---------------------------------------------------------------------------    
+
+    if tag_exist(photo,'sdss_r_lum') then begin
+
+       good = where((stellar_mass.ml_synth_gr gt -900) and (photo.sdss_r_lum gt -900.0),ngood)
+
+       if (ngood ne 0L) then begin
+
+          ml = stellar_mass[good].ml_synth_gr
+          ml_err = stellar_mass[good].ml_synth_gr_err
+          
+          r_lum = 10.0^photo[good].r_lum
+          r_lum_err = alog(10.0)*r_lum*photo[good].r_lum_err
+
+          mass = r_lum * ml
+          mass_err = sqrt( (r_lum*ml_err)^2 + (r_lum_err*ml)^2 )
+             
+          stellar_mass[good].mass_synth_gr_r = alog10(mass)
+          stellar_mass[good].mass_synth_gr_r_err = mass_err/mass/alog(10.0)
+
+       endif
+
+    endif
+    
+return, stellar_mass
+end    

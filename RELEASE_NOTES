@@ -1,0 +1,327 @@
+2006-Jun-28
+
+   IOVERSCAN - new CONSTANT_OVERSCAN keyword added
+
+2005-Jul-26
+
+   ISTARSEARCH() - bug fix when precessing coordinates (thanks to Andy
+      Marble)
+
+2005-Jul-24
+
+   REPAIR_LA_COSMIC_CRPIX - restore pixels improperly flagged as
+      cosmic rays by LA_COSMIC.
+
+2005-Jul-20
+
+   ITRACESPEC - use ROBUST_POLY_FIT() in favor of POLY_FIT(); added
+      TRACE_MINCOL and TRACE_MAXCOL optional inputs; removed internal
+      routine FIT_TRACE()
+
+   I2DSTARFIT() - new routine to subtract a point source (e.g., a
+      foreground star) from the 2D spectrum before extraction
+
+   IEXTRACT/IDOEXTRACT - STARFIT keyword now calls I2DSTARFIT()
+
+   ISPEC_WEBPAGE - added NOPSCONVERT keyword
+
+   ICRCOMBINE - Bug fix.  If CR_REJECT rejects all pixels from an
+      image stack, then interpolate smoothly over those pixels
+      (previously, CR_REJECT was setting the error to 0.0, which gave
+      infinities when sky subtracting, etc.).
+
+##########
+ISPEC v2.0
+##########
+
+2005 Apr-July
+
+Documentation was generally cleaned up and improved.  Copyright
+notices were added to every routine.  The standard-star directories
+were totally re-organized: The calspec database was updated with
+2004-Jun-15 version spectra, and STDPATH in the IBATCH parameter file
+is now obsolete.  Both the EQUINOX and EPOCH keywords are now
+supported.  Support for the one-dimensional bad pixel spectrum has
+been suspended in the new extraction code, IDOEXTRACT.  Combining CR
+splits *and* cosmic-ray rejection now occurs before sky subtraction,
+because CR's can affect the sky fit.  In retrospect, the wavelength
+and distortion maps should have been written as binary FITS tables
+rather than IDL save sets; perhaps this will be changed in a
+far-future version of iSPEC2d.
+
+Major developments: ICRCOMBINE() now solves for integer pixel shifts
+among sequential exposures.  Asymmetric extraction apertures now can
+be specified in IEXTRACT or IDOEXTRACT.
+
+   IDOEXTRACT - new routine to extract one-dimensional spectra using
+      the two-dimensional wavelength maps; sky-subtracted spectra are
+      assumed; several new header parameters
+
+   IDOSPEC - new wrapper routine for IDOEXTRACT
+
+   IEXTRACT - HELIOCOR keyword removed; SEEING keyword added;
+      LOAPERTURE and UPAPERTURE optional inputs added, which allows
+      asymmetric extraction apertures to be defined in either this
+      routine or IDOEXTRACT; several new header parameters
+
+   ISENSFUNC() - totally re-written (see the detailed modification
+      history)
+
+   IBATCH - various changes incorporating the new routines and
+      reduction procedures; removed TELLLIST and TELLURIC optional
+      inputs
+
+   ISEEING - this routine is now somewhat obsolete, but it may remain
+      useful if traditional (re-sampling) wavelength calibration is
+      carried out; the median seeing is now computed in IDOEXTRACT if
+      the SEEING keyword is set
+
+   ICALIBRATE - changed NOSENSERR keyword to EXCLUDE_SENSERR; the
+      default is to propagate the error in the sensitivity
+      function; removed TELLURIC keyword in favor of the TELLFITS
+      optional input (see implementation in IFLUXCALIBRATE)
+
+   IPARSE_QALOGFILE() - improved documentation and updated to be
+      consistent with the new ISENSFUNC() log output
+
+   IQAPHOTO - improved documentation and postscript output
+
+   IALL - various changes incorporating the new routines and
+      reduction procedures; added FLUXCALIBFILE optional input;
+      removed TELLFILE optional input; added SENSNAME optional input 
+
+   IFLUXCALIBRATE() - new routine to flux-calibrate the
+      two-dimensional, sky-subtracted spectra using the
+      two-dimensional wavelength map
+
+   ISKYSHIFT() - improved centroiding that relies on more than just
+      the 5577 sky line; use iterative flux- and gaussian-weighted
+      centroiding rather than a gaussian fit to the sky lines;
+      improved SKYLINES.DAT file
+
+   IOVERSCAN - simplify the OVERSCAN header keyword (no longer follows
+      the IRAF convention); SPLINE_OVERSCAN keyword and BKPT_OVERSCAN
+      optional input added
+
+   ITRIM - simplify the TRIM header keyword (no longer follows the
+      IRAF convention); remove the CCDSEC header keyword
+
+   IRDSENSFUNC() - the sensitivity functions no longer handle the
+      telluric spectra
+
+   RD2DSPEC() - simpler treatment of reading in the SKY and WAVEMAP
+      extensions; slight speed improvement by using FITS_READ instead
+      of MRDFITS(); converts the 2D wavelength map trace set into a
+      double precision 2D image; improved reading of the telluric
+      spectrum, if present
+
+   ISKYSUBTRACT2D - write out the 2D wavelength map used for the
+     b-spline sky subtraction as a fourth FITS extension; bug fix: the
+     inverse variance input to BSPLINE_ITERFIT() was commented out,
+     which prevents iterative rejection (thanks to Christy Tremonti);
+     bug fix: floor the sky aperture to be at least one pixel (row)
+     wide; bug fix in the way the error in the sky subtraction was
+     being computed; bug fix: FORAGE was not being properly indexed
+     within the FOR loop on SKYLIST
+
+   WRT2DSPEC - write out the 2D wavelength map trace set (passed by
+     ISKYSUBTRACT2D) as the fourth FITS extension and the telluric
+     spectrum (passed by IFLUXCALIBRATE or ICALIBRATE) as the fifth
+     extension
+
+   IHEADER_UPDATE() - EPOCH and EQUINOX keywords are now supported;
+      added MJD-OBS header keyword, which is now read by IFORAGE();
+      *ALL* IRAF header keywords are removed here!!
+
+   ICRCOMBINE - average the MJD-OBS values; changed the default NSIG
+      parameter to increase the number of iterations; wrote
+      FIND_PIXSHIFT() subroutine to solve for an integer pixel shift
+      before images are combined
+
+   ARM_OPTEXTRACT - new optimal extraction routine written by Andy
+      Marble and imported into iSPEC
+
+   WRITE_STANDARDS_DATABASE - new routine to re-organized the
+      standard-star database; UPDATE_STANDARDS_DATABASE and
+      READ_STANDARDS_TABLE now obsolete
+
+   WRITE_BINNED_STANDARDS - new routine to generate binned
+      standard-star spectra for CALSPEC
+
+   ISTARSEARCH() - new routine excised from ISPEC_MAKELISTS for
+      identifying standard stars from a coordinate list; added
+      STARINFO optional input
+
+   ISPEC_MAKELISTS - use ISTARSEARCH(); generalized internal
+      subroutine WRITE_PARAMFILE
+
+   ARM_ZEROCOMBINE and ARM_FLATCOMBINE - new routines written by
+      A. Marble now part of ISPEC; these should be used in favor of
+      ICALIBAVG()
+
+   IARCFIT_MAKEFILE - new routine (replacing IARCFIT_WRAPPER) to
+      generate a file of initial line positions from arc lamps, the
+      output of which can be passed to IARCFIT via the ARC_PIXEL
+      keyword
+
+   ISPEC_COUNT_CRPIX - new, simple routine to count the number of
+      pixels affected by cosmic rays given a FITS file list
+
+   ITRACESPEC - slightly modified QA plot
+
+   ISKYMASK() - slight cosmetic improvements; only mask 5577 and 6300
+     sky lines
+
+   IARCFIT - minor bug fix (thanks to A. Marble)
+
+   IRESTORE_WMAP - documentation improved; the wavelength map is now
+      restored in double precision
+ 
+   I1DNAMES() - documented; prefix 'w' removed to be consistent with
+      IDOEXTRACT
+
+   IHEADER_CHECK - more informative error messages
+
+   ISPEC_WEBPAGE - documented and improved slightly
+
+   ISPEC_CREATE_PNG - documented; image scaling improved substantially
+
+   INICE_LINENAME() - documented
+
+   IMASK_BITS - documented
+
+   ICHOOSE_WMAP - documented
+
+   FMTAPERTURE - documented
+
+##########
+ISPEC v1.1
+##########
+
+2005-Jan-19
+
+   IEXTRACT - Previously, if either NOSKYSHIFT *or* NOSKYSUB were set,
+      then no sky-line shift was applied.  Now, this only occurs if
+      NOSKYSHIFT by itself is set.
+
+2005-Jan-14
+
+   ISKYSUBTRACT2D - Added new optional keyword NORDER_SKY.
+
+   ISENSFUNC() - Reject bandpasses from the fitting that are affected by
+      telluric absorption by setting the inverse variance equal to
+      zero.
+
+2004-11-15
+
+   ICOMPARE_FLUXED_STANDARDS - Compare flux-calibrated standard stars
+      to the published standard spectral energy distributions.
+
+2004-10-05
+
+   ISPEC_MAKELISTS - added SEARCHRAD optional input
+
+2004-09-27
+
+   ISPEC_WEBPAGE, ISPEC_CREATE_PNG - bug fix: the unix command RM
+      chokes when the argument list is too long; in ISPEC_CREATE_PNG
+      use MRDFITS() rather than FITS_OPEN
+
+2004-09-21
+
+   IOVERSCAN, ICCDPROC - if NORDER_OVERSCAN is negative then do not
+      subtract the overscan vector
+
+2004-09-20
+
+   WRT1DSPEC - added NOBADMASK keyword; updated ISPEC
+
+2004-09-15
+
+   ISKYWINDOWS - routine removed (superseded by ISKYSELECT)
+
+   ISPEC_MAKELISTS - read compressed files
+
+   ISKYSUBTRACT2D - major changes/improvements; see documentation
+
+2004-09-01
+
+   IHEADER_CHECK - read compressed files
+   
+   WRT2DSPEC - remove .GZ extension in the output file name if present
+   
+   IEXTRACT - added support for optimal extraction (developed by Andy
+      Marble)
+   
+   IEXTRACT_OPTIMAL, IEXTRACT_OPTIMAL_SPROF, IEXTRACT_OPTIMAL_1D - new
+      routines
+
+2004-Jun-23
+
+   ISKYSELECT - new interactive routine to select sky apertures; the
+      output sky aperture file is subsequently given to ISKYSUBTRACT2D
+      for b-spline sky subtraction; the bulk of this routine was
+      contributed by Andy Marble
+
+   ISKYSUBTACT2D - major improvements incorporated thanks to Andy Marble
+
+   IBATCH & IALL - minor changes to accomodate the new sky subtraction protocol 
+
+2004-Jun-21
+
+   ISPEC_MAKELISTS - minor bug fix when all of the objects are standard
+      stars
+
+   IOVERSCAN() - automatically determine whether the overscan region is 
+      along rows or along columns; minor error checking improvements
+
+   IREAD_LAMPLIST() - new routine to read the comparison lamp lists;
+      line lists were updated from the 2003-2004 CRC; support for new
+      lines (Hg & Cd)
+
+   IARCFIT - use IREAD_LAMPLIST(); better QA plot labeling
+
+   ICONSTRUCT_TELLURIC - new routine written
+
+   ILAMPRES() removed in favor of IM_SPECRES_LAMP() in IMPRO
+
+2003-Dec-08 
+
+***New ISPEC version v1_1***
+
+   IBATCH parameter file - APERTURE, SKYAPERTURE keywords relegated;
+      GZIP parameter added
+
+   All FITS files can be compressed (with GZIP) to save disk space;
+      GZIP keyword added to all appropriate routines
+
+   ISKYSUBTRACT2D - two dimensional sky subtraction using b-spline
+      fitting (see Kelson 2003) implemented; sky subtraction now
+      occurs immediately after ICCDPROC and preceeding cosmic-ray
+      rejection; 2D spectra after ICCDPROC now have three FITS
+      extensions, the third extension being the 2D sky spectrum
+
+   IRESTORE_WMAP() - excised from ICALIBRATE, expanded and documented
+
+   ICHOOSE_WMAP() - excised from ICALIBRATE, expanded and documented
+   
+   ISPEC_MAKELISTS - support for sky-subtracted images, GZIP option
+   
+   RD2DSPEC() - properly read sky and telluric spectrum extensions;
+      better memory management and error checking
+   
+   IBATCH - new optional input (SKYLIST) and keyword (SKYSUB)
+   
+   IALL - all keywords CCDPROC, CALIBRATE, etc. relegated; optional
+      input files are now used to determine the required behavior;
+      better error and parameter checking
+   
+   ISPEC_WEBPAGE - completely re-written from KGWEBPAGE; new keywords, 
+      inputs, and file history retrieval
+   
+   IAPPEND_TELLURIC - new routine to append the telluric spectrum to a
+      flux-calibrated FITS file
+   
+   ITELLURIC_COR - new routine to apply a telluric correction
+   
+   ISPEC, IALL, IBATCH - general changes and updates

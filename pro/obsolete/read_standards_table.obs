@@ -1,0 +1,19 @@
+function read_standards_table, bessell1999=bessell1999, calspec=calspec, ctionewcal=ctionewcal, $
+  oke1990=oke1990, spec50cal=spec50cal, datapath=datapath
+; jm04mar20uofa
+
+    rootpath = filepath('',root_dir=getenv('ISPEC_DIR'),subdirectory='standards')
+    
+    if keyword_set(bessell1999) then path = 'bessell1999/'
+    if keyword_set(calspec) then path = 'calspec/'
+    if keyword_set(ctionewcal) then path = 'ctionewcal/'
+    if keyword_set(oke1990) then path = 'oke1990/'
+    if keyword_set(spec50cal) then path = 'spec50cal/'
+
+    datapath = rootpath+path
+    
+    table = mrdfits(datapath+'table_info.fits',1,/silent)
+    
+return, table
+end
+    

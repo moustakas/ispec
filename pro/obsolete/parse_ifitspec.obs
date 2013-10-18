@@ -1,0 +1,91 @@
+;+
+; NAME:
+;       PARSE_IFITSPEC()
+;
+; PURPOSE:
+;       Parse the output from IFITSPEC. 
+;
+; CALLING SEQUENCE:
+;       line = parse_ifitspec([fitspecfile=,datapath=,root=,$
+;          linenodust=],/help,_extra=extra)
+; INPUTS:
+;       None.
+;
+; OPTIONAL INPUTS:
+;       fitspecfile - output data structure from IFITSPEC
+;       datapath    - data path to FITSPECFILE
+;       root        - unique word to identify FITSPECFILE
+;
+; KEYWORD PARAMETERS:
+;       extra       - keywords for IUNRED_LINE()
+;
+; OUTPUTS:
+;       line        - results of the emission-line fitting 
+;
+; OPTIONAL OUTPUTS:
+;       linenodust  - same data structure as LINE but corrected for
+;                     dust extinction using the Ha/Hb Balmer decrement 
+;
+; PROCEDURES USED:
+;       CWD(), DJS_FILEPATH(), SPLOG, MRDFITS(), IUNRED_LINEDUST(),
+;       ICLASSIFICATION(), IABUNDANCE()
+;
+; EXAMPLE:
+;
+; MODIFICATION HISTORY:
+;       J. Moustakas, 2003 June 13, U of A
+;       jm03aug5uofa - added SUFFIX keyword
+;-
+
+function parse_ifitspec, fitspecfile=fitspecfile, datapath=datapath, $
+  root=root, linenodust=linenodust, _extra=extra, help=help
+    
+    if keyword_set(help) then begin
+       print, 'Syntax - line = parse_ifitspec([fitspecfile=,datapath=,root=,$'
+       print, '  linenodust=],/help,_extra=extra)'
+       return, -1L
+    endif 
+
+    if n_elements(datapath) eq 0L then datapath = cwd()
+    if n_elements(root) eq 0L then root = ''
+    
+    pushd, datapath
+    
+; restore the most recent line fit structure in datapath
+
+    if n_elements(fitspecfile) eq 0L then begin
+       allfiles = findfile(djs_filepath('*'+root+'*_specdata.fits.gz'),count=fcount)
+       fitspecfile = allfiles[(reverse(sort(allfiles)))[0]]
+    endif
+
+    if file_test(fitspecfile) then begin
+       if not keyword_set(silent) then splog, 'Reading '+datapath+fitspecfile+'.'
+       line = mrdfits(fitspecfile,1,/silent)
+    endif else begin
+       if not keyword_set(silent) then splog, 'File '+datapath+fitspecfile+' not found.'
+       return, -1L
+    endelse
+
+    nspec = n_elements(line)
+
+; de-redden the line fluxes
+
+    linenodust = iunred_linedust(line,_extra=extra)    
+
+; compute strong-line abundances
+
+    abundance = im_abundance(linenodust)
+    outabund = struct_trimtags(abundance)
+    
+; apply L. Kewley's (2001) starburst/AGN classification criteria 
+
+    class = iclassification(linenodust,_extra=extra)
+    outclass = struct_trimtags(class,select=['*CLASS*'])
+    
+; concatenate all the results and return
+
+    line = struct_addtags(struct_addtags(line,outabund),outclass)
+    linenodust = struct_addtags(struct_addtags(linenodust,outabund),outclass)
+    
+return, line
+end    

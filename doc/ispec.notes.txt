@@ -1,0 +1,76 @@
+How do we subtract the continuum from a spectrum in a consistent,
+quantitative, and efficient manner?  In particular, how can we
+quantify the quality of the continuum subtraction to determine the
+accuracy of the photometric calibration?
+
+Say our spectra range from 3000-8000 angstroms.  The catalog of lines
+observed in external galaxies should be completely tractable.
+Therefore, imagine choosing ranges in the continuum known to be free
+of emission/absorption lines.  These regions should be examined in all
+the spectra to ensure that indeed no emission lines appear in those
+wavelength regions.  Use those points to fit a low-order polynomial or
+a third-order spline to the continuum and subtract it from the
+spectrum.  The continuum in certain bandpasses can be summed for
+continuum spectrophotometry.
+
+Now take the continuum-subtracted spectrum and do a 1.5-3 sigma
+iterative clip to try and remove the emission/absorption lines, and
+examine the rms dispersion of flux values of the remaining pixels.  If
+the mean/median is not near zero and the dispersion is not
+approximately the expected noise, then redo the continuum
+subtraction.  This should allow one to look for systematics in the
+continuum subtraction with wavelength.  
+
+Equivalent widths can be measured for all the lines using a catalog of
+expected emission/absorption lines.  Use the instrumental width as a
+first guess to the gaussian FWHM, and fit to the amplitude, sigma
+width, and central wavelength (or keep this parameter fixed, having
+corrected for the systemic velocity).  That should yield ratios very
+quickly and accurately.
+
+Also, a very good bias subtraction and flat-fielding must be
+accomplished.  By definition, flat-fielding attempts to remove
+pixel-to-pixel variations in the CCD.  With the flats, one could plot
+a two dimensional surface of the pixel response as a function of the
+CCD rows and columns.  Assume the pixel response varies linearly
+across one length of the CCD.  By fitting a linear function to the
+flat-fields and minimizing the residuals, the effect could be
+subtracted.  Extrapolating this idea, imagine choosing a general
+function along an arbitrary direction (maybe parameterize the function
+in polar coordinates), which could then be fit to the flat field, and
+an idea of the flat-fielding accuracy could be obtained.  One caveat:
+what if the CCD does not vary according to one single function across
+the entire chip?  Well, then a more general function must be chosen to
+take this into account, perhaps even forcing particular functions to
+be fit to particular regimes of the CCD.  Bias subtraction, on the
+other hand, should be trivial, even if it requires examining the
+overscan region.
+
+Once flat-fielding and bias subtraction have been accomplished,
+extracting a one-dimensional spectrum simply involves adding all the
+flux along the slit axis (as opposed to the dispersion axis).
+However, night sky lines should be removed as well during this
+procedure.  Keith Horne developed a method in IRAF for "optimally
+extracting" a spectrum, and this technique should be straight forward
+to impliment in IDL.  A simply good enough template night-sky spectrum
+should yield consistent results.  
+
+What about the photometric and the wavelength calibration?  The
+wavelength calibration should require a bit of user interaction, but
+can be applied to all the spectra from a single night very rapidly,
+assuming sufficient arc lamp exposures were taken.  Photometric
+calibration is the tricky part.  First, a database of the observed
+standard stars needs to be organized; then, a sensitivity function
+needs to be constructed, which accounts for the airmass (which should
+be a very simple correction) and the seeing/photometric conditions.
+Hopefully, the observing conditions were photometric.  In principal,
+spectrophotometry can be accurate to a few percent.
+
+A database of information on the observed galaxies should be
+cataloged, including measurements of metallicity, molecular gas
+content, star-formation rate, morphology, merger stage (i.e.,
+internuclear separation), etc.  Archival ultraviolet data might also
+be collected to study the effects of dust and extinction.
+Specifically, I would like to explore the question of whether the
+correlation between infrared luminosity and dust content is due to a
+UV selection effect.

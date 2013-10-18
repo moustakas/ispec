@@ -1,0 +1,27 @@
+# 1 FILE
+# 2 STAR
+# 3 RA [J2000]
+# 4 DEC [J2000]
+# 5 B
+# 6 V
+# 7 STARPATH
+# 8 STARCOLOR
+bessell1999_l377.dat	 LTT377     00:41:30.47 -33:37:32.0   11.713   11.225   bessell1999   tomato
+bessell1999_l1020.dat	 LTT1020    01:54:50.00 -27:28:32.0   12.081   11.511   bessell1999   gold
+bessell1999_eg21.dat	 EG21       03:10:29.00 -68:35:54.0   11.416   11.380   bessell1999   forestgreen
+bessell1999_l1788.dat	 LTT1788    03:48:22.20 -39:08:35.0   13.638   13.153   bessell1999   brown
+bessell1999_l2415.dat	 LTT2415    05:56:24.74 -27:51:32.3   12.623   12.210   bessell1999   plum
+bessell1999_h600.dat	 HILTNER600 06:45:12.00 +02:08:00.0   -999.0   10.420   bessell1999   orange
+bessell1999_l3218.dat	 LTT3218    08:41:32.56 -32:56:34.9   12.075   11.846   bessell1999   wheat
+bessell1999_l3864.dat	 LTT3864    10:32:13.56 -35:37:41.2   12.670   12.164   bessell1999   blueviolet
+bessell1999_l4364.dat	 LTT4364    11:45:42.92 -64:50:29.5   11.702   11.512   bessell1999   purple
+bessell1999_f56.dat	 FEIGE56    12:06:47.23 +11:40:12.6   -999.0   11.110   bessell1999   khaki
+bessell1999_l4816.dat	 LTT4816    12:38:49.93 -49:48:01.2   13.959   13.782   bessell1999   cyan
+bessell1999_cd32.dat	 CD-329927  14:11:46.32 -33:03:14.3   10.780   10.441   bessell1999   springgreen
+bessell1999_l6248.dat	 LTT6248    15:38:59.80 -28:35:34.0   12.300   11.812   bessell1999   lightyellow
+bessell1999_eg274.dat	 EG274      16:23:33.84 -39:13:46.2   10.880   11.012   bessell1999   limegreen
+bessell1999_l7379.dat	 LTT7379    18:36:25.95 -44:18:36.9   10.843   10.227   bessell1999   cornsilk
+bessell1999_l7987.dat	 LTT7987    20:10:56.85 -30:13:06.6   12.277   12.217   bessell1999   beige
+bessell1999_l9239.dat	 LTT9239    22:52:40.90 -20:35:32.0   12.691   12.062   bessell1999   seashell
+bessell1999_l9491.dat	 LTT9491    23:19:35.00 -17:05:30.0   14.133   14.104   bessell1999   linen
+bessell1999_f110.dat	 FEIGE110   23:19:58.40 -05:09:56.2   11.542   11.846   bessell1999   yellow

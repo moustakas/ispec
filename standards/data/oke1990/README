@@ -1,0 +1,72 @@
+This directory contains ASCII data files for the Oke (AJ,
+99, 1621, 1990) optical spectrophotometric standard stars. 
+
+The files with prefix 'm' list wavelength (A), AB magnitude
+and the bandpass used in measurement.
+
+The files with prefix 'f' list wavelength (A), flux 
+(ergs/cm/cm/s/A * 10**16), flux (milli-Jy) and the bandpass 
+used in measurement.
+
+The files can be converted to MIDAS tables (.TBL). DOITOKE.PRG 
+is the MIDAS procedure to convert all the files and FORMAT.FMT 
+is the format file for the tables.
+
+There is an explanatory text and finding charts available for 
+these standard stars. These are available on the World Wide Web
+(http://www.eso.org/spect-phot-standards/optuvstandards.html) 
+or contact J. R. Walsh (jwalsh@eso.org) for details. 
+
+July 1995
+
+-----------
+
+Updated website (J. Moustakas, 2002 June 12)
+http://www.eso.org/observing/standards/spectra/okestandards.html:
+
+Oke (1990) Spectrophotometric Standards
+
+Oke (AJ, 99, 1621, 1990) has provided absolute spectral energy distributions covering the
+wavelength range 3200 to 9200A in AB magnitudes for 25 stars. The measurements were made
+with the Double Beam Spectrogrpph of the Hale 5m telescope. The reduced magnitudes are
+tabulated at 1A intervals from 3300 to 4700A and at 2A intervals from 4700 to 9200A.
+Comparison of the fluxes with those determined elsewhere showed that Oke's absolute
+magnitudes are systematically brighter by 0.04 mag. The magnitudes and fluxes plotted have
+been corrected for this effect. Colina & Bohlin (AJ, 1931, 1994) tabulate the differences
+between the original Oke fluxes, in terms of synthesized B and V magnitudes, and Landolt
+photometry for each star individually. The AB magnitudes were converted to flux
+(ergs/cm/cm/s/A) using the formula 
+ABMAG = -2.5 alog10(Fnu) - 48.59 
+(Hamuy et al., PASP, 104, 533, 1992), where Fnu is in ergs/cm/cm/s/Hz.
+
+ No.   Name         alpha (2000) delta     Sp.     V     AB
+                                           Type        (5460A)
+---------------------------------------------------------------
+  1   G158-100     00 33 54.3  -12 07 57   sdG   14.89  14.82
+  2   HZ 4         03 55 21.7  +09 47 19   DA4   14.52  14.47
+  3   G191B2B      05 05 30.6  +52 49 54   DAO   11.78  11.72
+  4   G193-74      07 53 27.4  +52 29 36   DC    15.70  15.58
+  5   BD+75d325    08 10 49.3  +74 57 57   O5p    9.54   9.52
+  6   Feige 34     10 39 36.7  +43 06 10   DO    11.18  11.13
+  7   HD 93521     10 48 23.5  +37 34 13   09Vp   7.04   6.96
+  8   HZ 21        12 13 56.4  +32 56 31   DO2   14.68  14 67
+  9   Feige 66     12 37 23.6  +25 04 00   sdO   10.50  10.43
+ 10   Feige 67     12 41 51.8  +17 31 20   sdO   11.81  11.78
+ 11   G60-54       13 00 09.5  +03 28 56   DC    15.81  15.73
+ 12   HZ 44        13 23 35.4  +36 08 00   sdO   11.66  11.65
+ 13   GRW+70d5824  13 38 51.8  +70 17 08   DA3   12.77  12.72
+ 14   BD+33d2642   15 51 59.9  +32 56 55   B2IV  10.81  10.74
+ 15   G138-31      16 27 53.6  +09 12 24   DA7   16.14  16.07
+ 16   G24-9        20 13 56.0  +06 42 55   DC    15.72  15.77
+ 17   BD+28D4211   21 51 11.1  +28 51 52   Op    10.51  10.47
+ 18   B0+25d4655   21 59 39.3  +26 25 42          9.76   9.65
+ 19   LTT 9491     23 19 35.0  -17 05 30   DC    14.04  14.06
+ 20   Feige 110    23 19 58.4  -05 09 56   DOp   11.82  11.81
+ 21   GD 248       23 26 06.7  +16 00 21   DC    15.09  15.08
+ 22   GD 50        03 48 50.1  -00 58 30   DA2   14.06  14.06
+ 23   SA95-42      03 53 43.7  -00 04 33         15.61  15.60
+ 24   GD 108       10 00 47.3  -07 33 31   sdB?  13.56  13.57
+ 25   NGC 7293     22 29 38.5  -20 50 13         13.51  13.48
+
+Note: The ABMAG listed for HZ 4 in Table 1 of Oke (1990) is in error. The value should be
+14.47. 

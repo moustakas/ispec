@@ -1,0 +1,51 @@
+pro okemassey
+; jm02jun12uofa
+; compare the Massey 1988 and Oke 1990 spectrophotometric standards
+
+    okepath = filepath('',root_dir=getenv('RKSPEC_DIR'),subdirectory='standards/oke90')
+    okefiles = findfile(okepath)
+    okefiles = okefiles[where(strmatch(okefiles,'*.dat') eq 1B)]
+
+    masseypath = filepath('',root_dir=getenv('RKSPEC_DIR'),subdirectory='standards/massey88')
+    masseyfiles = findfile(masseypath)
+    masseyfiles = masseyfiles[where(strmatch(masseyfiles,'*.dat') eq 1B)]
+
+    starnames = ['feige34','g191b2b','hz44','bd+284211','feige110']
+    nstars = n_elements(starnames)
+
+    window, 0, xs=550, ys=550
+    for i = 0L, nstars-1L do begin
+
+       okefile = match_string(starnames[i],okefiles)
+       readcol, okepath+okefile, okewave, okemag, /silent
+       good = where(okewave lt 7500.0)
+       okewave = okewave[good] & okemag = okemag[good]
+       okeflux = 10D^(-0.4*(okemag+48.59D)) * 2.99793D18 / okewave^2 ; [erg/s/cm^2/A]
+
+       masseyfile = match_string(starnames[i],masseyfiles)
+       readcol, masseypath+masseyfile, masseywave, masseymag, /silent
+       good = where(masseywave lt 7500.0)
+       masseywave = masseywave[good] & masseymag = masseymag[good]
+       masseyflux = 10D^(-0.4*(masseymag+48.59D)) * 2.99793D18 / masseywave^2
+
+       djs_plot, okewave, okeflux, xsty=3, ysty=3, position=[0.15,0.5,0.95,0.95], $
+         xtickname=replicate('',10), charsize=1.2, charthick=2.0, $
+         xthick=2.0, ythick=2.0, ytitle='f_{\lambda}', xrange=[min(okewave),4000]
+       djs_oplot, masseywave, masseyflux, color='green';, ps=4, syms=0.2
+
+       legend, [strupcase(starnames[i]),'','Oke 1990','Massey 1988'], line=[-1,-1,0,0], $
+         color=djs_icolor(['default','','default','green']), charsize=1.5, charthick=2.0, $
+         /right, /top, box=0
+
+       fluxdiff = interpol(masseyflux,masseywave,okewave)-okeflux
+       djs_plot, okewave, 100.0*fluxdiff/okeflux, ps=3, /noerase, position=[0.15,0.1,0.95,0.5], $
+         xsty=3, ysty=3, yrange=max(abs(100.0*fluxdiff/okeflux))*[-1.05,1.05], $
+         ytitle='Residuals (%)', charsize=1.2, charthick=2.0, $
+         xthick=2.0, ythick=2.0, xtitle='Wavelength', xrange=[min(okewave),4000.0]
+
+       cc = strupcase(get_kbrd(1))
+       
+    endfor
+
+return
+end      

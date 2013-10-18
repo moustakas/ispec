@@ -1,0 +1,31 @@
+J. Moustakas, 2004 Feb 3, U of A
+
+Constraints on ISPECLINEFIT().
+
+* OII doublet, H_delta, H_gamma, H_beta, OIII doublet, OI 6300, NII
+  doublet, H_alpha, SII doublet
+
+* Balmer and forbidden line widths and redshifts are tied together
+
+* Initial mask width:  20 Angstroms, then 5*sigma of the mean
+  line-width of well-fitted emission lines.  Also mask negative pixels
+  and telluric wavelengths.
+
+* Initial emission line width:  105 km/s.
+
+* IBACKFIT:  initial guess on the template coefficients is equal
+  contributions; initial guess on the reddening is 0.0 and the
+  reddening is tied together for all the templates; O'Donnell Galactic
+  reddening curve, normalized at 5500 A
+
+*   
+
+  
+Questions
+---------
+
+Why don't the coefficients sum to 1.0?
+
+
+  
+

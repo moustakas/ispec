@@ -1,0 +1,947 @@
+;+
+; NAME:
+;	ISENSFUNC()
+;
+; PURPOSE:
+;	Use standard star observations to derive a sensitivity
+;	function.  
+;
+; CALLING SEQUENCE:
+;       info = isensfunc(stdlist,datapath=,stdpath=,sensname=,$
+;          extfile=,bsorder_sens=,nord_sens=,zptshift=,senstitle=,$
+;          grey=,searchrad=,_extra=extra,/telluric,/doplot,/write)
+;
+; INPUTS:
+;	stdlist   - file list of calibrated standard stars
+;
+; OPTIONAL INPUTS:
+;	datapath     - file path to the standard star observations
+;	stdpath      - file path to the published standard star
+;                      spectra (default 'CALSPEC')
+;	sensname     - root name of the sensitivity curve
+;       extfile      - name of the extinction file to use (default 
+;                      'KPNOEXTINCT.DAT')
+;	bsorder_sens - order of the b-spline fit to the sensitivity 
+;                      function (default 20)
+;	nord_sens    - order of the spline at every b-spline
+;                      breakpoint (default 3) 
+;       senstitle    - plot title
+;       zptshift     - scalar sensitivity function zero point shift in
+;                      magnitudes; shifts the sensitivity function by
+;                      a constant amount (relative to mean sensitivity
+;                      at the mean wavelength of the data); useful if
+;                      doing absolute spectrophotometry
+;	grey         - apply a grey shift either to the most sensitive
+;                      star (GREY=1) or the mean sensitivity (GREY=2)
+;                      at the average wavelength of the standards
+;                      (default GREY=1)
+;       searchrad    - standard star search radius [arcsec] (if
+;                      coordinates are poor)
+;	extra        - keywords for BSPLINE_ITERFIT(), ISEEING, and
+;                      IM_DJS_ANGLE_MATCH() 
+;
+; KEYWORD PARAMETERS:
+;       telluric  - derive a telluric absorption spectrum
+;	doplot    - generate diagnostic & quality assurance plots
+;	write     - write the sensitivity curve as a FITS file and the
+;                   log file
+;
+; OUTPUTS:
+;       info - output data structure with the following fields
+;          specname  - input FITS spectrum name
+;          starname  - star name from the header
+;          tablename - name of the standard in the STARINFO table 
+;          date      - date of observation
+;          airmass   - airmass of observation
+;          pa        - slit position angle
+;          parangle  - parallactic angle
+;          seeing    - mean seeing
+;          energy    - encircled energy
+;          greyshift - either maximum (if GREY=1) or mean (if GREY=2)
+;                      grey shift
+;          greywave  - wavelength of the grey shift
+;          senszero  - median sensitivity at the mean wavelength of
+;                      the sensitivity function in units of 
+;                      [counts/s/A]/[erg/s/cm2/A]
+;          psym      - plot symbol
+;          color     - star color
+;
+; OPTIONAL OUTPUTS:
+;
+; COMMENTS:
+;       The plot legend shows the five most deviant stars.  
+;
+;       The error spectra and bad pixel masks of the standards are not
+;       incorporated into generating the sensitivity function.
+;
+;       Be sure to run UPDATE_STANDARDS_DATABASE verify the standard 
+;       star database.  
+;
+;       Assuming that the shifts in the sensitivity functions are due
+;       to clouds (and not slit loss), then the absolute
+;       spectrophotometric error is given by the scatter of the
+;       standards with respect to the sensitivity function fit with no
+;       grey shift.  If you are not concerned with absolute
+;       spectrophotometry then shift each sensitivity function to the
+;       maximum sensitivity (GREY=1).  Alternatively, grey shifting to
+;       the mean sensitivity (GREY=2) and flux-calibrating gives the
+;       relative spectrophotometric error as the scatter about that
+;       mean curve.
+;
+;       If ZPTSHIFT is non-zero then the SENSZERO field in INFO (see
+;       OUTPUTS) is *not* modified, but the output sensitivity
+;       functions and plots have the zero point shift applied.
+;
+;       If TELLURIC=1 then 
+;
+; EXAMPLE:
+;
+; INTERNAL ROUTINES:
+;       CLEANSENS, HEADCHECK(), SENSFUNCPLOT, STARSEARCH(),
+;       SENSFUNCFIT, WRITE_SENSFUNCFIT
+;
+; PROCEDURES USED:
+;	BSPLINE_ITERFIT(), BSPLINE_VALU(), READCOL, HEADFITS(),
+;	MAKE_WAVE(), SXPAR(), MKHDR, CWD(), ISTDFLUX(), DFPSPLOT,
+;	DFPSCLOSE, DJS_ITERSTAT, DJS_PLOT, DJS_OPLOT, IM_SYMBOLS,
+;	ANGSTROM(), IM_LEGEND, MRDFITS(), JD2FITSDATE(), DJS_MEAN(),
+;	IM_DJS_ANGLE_MATCH(), FSC_COLOR(), GET_ELEMENT, SXADDPAR,
+;	SXADDHIST, MWRFITS, SPLOG, MINMAX(), STRUCT_PRINT,
+;	STRUCT_TRIMTAGS(), DJS_MEDIAN(), ISEEING, REPSTR(),
+;	ROBUST_LINEFIT(), FLAM_UNITS(), TELLURIC_MASK()
+;
+; DATA FILES:
+;	${ISPEC_DIR}/etc/kpnoextinct.dat
+;	${ISPEC_DIR}/etc/starcolors.dat
+;	${ISPEC_DIR}/standards/SUPPORTED
+;
+; MODIFICATION HISTORY:
+;	J. Moustakas, 2001 August/October, U of A
+;       jm02jun12uofa - verify that the headers have all the required
+;                       fields 
+;       jm03apr11uofa - checked out ISPEC v1.0.0
+;       jm03apr21uofa - major updates to grey-shifting capabilities;
+;                       expanded documentation
+;       jm03apr22uofa - more major additions.  added WRITE_SENSFUCFIT
+;                       routine.  calculate the error spectrum in the
+;                       sensitivity function.  make grey-shifting
+;                       mandatory and write out separate sensitivity
+;                       functions 
+;       jm03apr23uofa - several bug fixes in STARSEARCH()
+;       jm03dec30uofa - added TELLURIC keyword
+;       A.R.Marble, 2004 January 6, U of A, plot color bugs fixed
+;       jm04jul11uofa - use a black plot background for contrast 
+;       jm05jan14uofa - reject bandpasses from the fitting that are
+;                       affected by telluric absorption
+;       jm05jan19uofa - when computing the grey-shift wavelength,
+;                       exclude masked bandpasses
+;
+; Copyright (C) 2001-2005, John Moustakas
+; 
+; This program is free software; you can redistribute it and/or modify 
+; it under the terms of the GNU General Public License as published by 
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. 
+; 
+; This program is distributed in the hope that it will be useful, but 
+; WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+; General Public License for more details. 
+;-
+
+pro cleansens, sensinfo
+; clean up memory
+
+    nsens = n_elements(sensinfo)
+    if nsens eq 0L then return
+
+    for k = 0L, nsens-1L do begin
+
+       if ptr_valid(sensinfo[k].bandwave) then ptr_free, sensinfo[k].bandwave
+       if ptr_valid(sensinfo[k].sens) then ptr_free, sensinfo[k].sens
+       if ptr_valid(sensinfo[k].bandmask) then ptr_free, sensinfo[k].bandmask
+
+    endfor
+
+return
+end    
+    
+function headcheck, header
+; check headers
+    
+    error = 0L
+    
+    object = sxpar(header,'OBJECT')
+    date = sxpar(header,'DATE-OBS')
+    minwave = sxpar(header,'CRVAL1')
+    dwave = sxpar(header,'CD1_1')
+    naxis = sxpar(header,'naxis1')
+    exptime = sxpar(header,'EXPTIME')
+    airmass = sxpar(header,'AIRMASS')
+
+    if (strcompress(object,/remove) ne '') or (strcompress(date,/remove) ne '') or $
+      (minwave ne 0L) or (dwave ne 0L) or (naxis ne 0L) or $
+      (exptime ne 0L) or (airmass ne 0L) then error = 1L
+    
+return, error
+end
+
+pro sensfuncfit, sensinfo, bsorder_sens, nord_sens, sensres, $
+  _extra=extra, fitsens, fitwave, coarsefit, senswave, sensfit, $
+  sensfiterr, sset
+; fit a b-spline to the sensitivity function in logarithm space
+; because it is smoother.  ignore the first and last data points
+
+    nstds = n_elements(sensinfo)
+    
+    fitwave = fltarr(total(sensinfo.nbins))
+    fitsens = fitwave*0.0
+    fitmask = byte(fitwave*0.0)
+    
+    for k = 0L, nstds-1L do begin
+
+       if k eq 0L then pbins = 0L else pbins = long(total(sensinfo[0:k-1].nbins))
+       nbins = sensinfo[k].nbins
+
+       fitwave[pbins:nbins+pbins-1] = *sensinfo[k].bandwave
+       fitsens[pbins:nbins+pbins-1] = *sensinfo[k].sens
+       fitmask[pbins:nbins+pbins-1] = *sensinfo[k].bandmask
+
+    endfor
+
+    bkptres = (max(fitwave)-min(fitwave))/bsorder_sens ; break point resolution [Angstrom]
+    bkpt = findgen(bsorder_sens)*bkptres+min(fitwave);+bkptres/2.0
+
+    fitvar = variance(fitsens,/double)
+    if (fitvar EQ 0) then fitvar = 1.0
+    fitinvvar = 0.0 * fitsens + 1.0/fitvar
+
+    sset = bspline_iterfit(fitwave,fitsens,invvar=fitinvvar*fitmask,bkpt=bkpt,$
+      nord=nord_sens,outmask=sensmask,upper=3.0,lower=3.0,_extra=extra,$
+      /silent)
+    coarsefit = bspline_valu(fitwave,sset)
+
+; compute the error in the sensitivity function at every unique
+; wavelength.  the bit of code below may be buggy.
+    
+    uwave = fitwave[uniq(fitwave,sort(fitwave))]
+
+    coarsefit_error = uwave*0.0
+    for j = 0L, n_elements(uwave)-1L do begin
+       xx = where(fitwave eq uwave[j],nxx)
+;      if nxx eq 0L then message, 'This needs to be generalized.' else $
+;        coarsefit_error[j] = stddev(coarsefit[xx]-fitsens[xx])
+       if nxx gt 1L then begin
+          djs_iterstat, coarsefit[xx]-fitsens[xx], sigrej=5.0, sigma=sig
+          coarsefit_error[j] = sig
+       endif
+    endfor
+    
+    senswave = findgen((max(fitwave)-min(fitwave))/sensres+1.0)*sensres+min(fitwave) 
+    sensfit = bspline_valu(senswave,sset)
+
+; resample the sensitivity function error spectrum
+
+    sensfiterr = interpol(coarsefit_error,uwave,senswave)
+    
+return
+end
+
+pro write_sensfuncfit, info, senswave, sensfit, sensfiterr, sensres, $
+  sensname, zptshift, telluric_spectrum=telluric_spectrum, $
+  telluric_header=telluric_header, histnote=histnote
+; jm03apr22uofa
+
+    nstds = n_elements(info)
+
+    mkhdr, senshead, sensfit, /extend
+    sxaddpar, senshead, 'OBJECT', 'Sensitivity Function'
+    sxaddpar, senshead, 'CTYPE1', 'LINEAR', ' projection type'
+    sxaddpar, senshead, 'CRVAL1', min(senswave), ' wavelength at the reference pixel'
+    sxaddpar, senshead, 'CRPIX1', 1.0, ' reference pixel number'
+    sxaddpar, senshead, 'CDELT1', sensres, ' dispersion at the reference pixel'
+    sxaddpar, senshead, 'CD1_1', sensres, ' dispersion in Angstroms per pixel'
+    sxaddpar, senshead, 'INSTAR', nstds, ' number of standard stars'
+    sxaddpar, senshead, 'ZPTSHIFT', zptshift, ' zero point shift [mag]'
+    if n_elements(histnote) ne 0L then sxaddhist, histnote, senshead
+    
+; log of the individual stars
+    
+    for i = 1L, nstds do sxaddpar, senshead, 'ISTAR'+string(i,format='(I2.2)'), $
+      strcompress(info[i-1L].starname,/remove), before='HISTORY'
+
+; add the seeing measurements to the header
+    
+    for i = 1L, nstds do sxaddpar, senshead, 'SEEING'+string(i,format='(I2.2)'), $
+      info[i-1L].seeing, format='(F5.3)', before='HISTORY'
+    
+    splog, 'Writing '+sensname+'.'
+    mwrfits, sensfit+zptshift, sensname, senshead, /create
+    mwrfits, sensfiterr, sensname ; extension 1
+    
+; add the telluric spectrum as a FITS extension to the sensitivity
+; function if it was created
+
+    if n_elements(telluric_spectrum) ne 0L then $
+      mwrfits, telluric_spectrum, sensname, telluric_header ; extension 2
+
+return
+end
+
+pro sensfuncplot, sensinfo, info, fitsens, fitwave, coarsefit, $
+  senswave, sensfit, sensfiterr, bsorder_sens, nord_sens, sset, $
+  zptshift, greyleg=greyleg, senstitle=senstitle, residuals=residuals, $
+  thick=thick
+
+    nstds = n_elements(info)
+
+; use a black background for maximum contrast
+
+    polyfill, [1,1,0,0,1], [1,0,0,1,1], /normal, color=djs_icolor('black')
+    
+; residuals plot
+      
+    residuals = fitsens - coarsefit
+    percent_residuals = 100.0*(10.0^(0.4*residuals)-1.0)
+;   percent_residuals = 100.0*((10^(0.4*fitsens)-10^(0.4*coarsefit))/10^(0.4*fitsens))
+    maxdev = fltarr(nstds)
+
+    djs_iterstat, abs(residuals), sigrej=5.0, sigma=rsig, mean=rmean
+
+    plot, [0], [0], xsty=3, ysty=11, xtitle='Wavelength ('+angstrom()+')', $
+      xrange=minmax(fitwave), ytitle='Residuals (mag)', charsize=1.1, charthick=thick, $
+      xthick=thick, ythick=thick, position=[0.13,0.12,0.88,0.35], yminor=3, $
+      yrange=(rmean+5.0*rsig)*[-1,1], /noerase, color=fsc_color('white',!d.table_size-25)
+      
+    axis, /yaxis, yrange=interpol(percent_residuals,residuals,!y.crange), ysty=1, $
+      charsize=1.1, charthick=thick, ythick=thick, ytitle='Residuals (%)', $
+      yminor=3, color=fsc_color('white',!d.table_size-25)
+    for k = 0L, nstds-1L do begin
+       diff = *sensinfo[k].sens - bspline_valu(*sensinfo[k].bandwave,sset)
+       maxdev[k] = max(abs(diff))
+       im_symbols, info[k].psym, color=fsc_color(info[k].color,!d.table_size-k-2), fill=1
+       good = where(*sensinfo[k].bandmask eq 1B,ngood,comp=bad,ncomp=nbad)
+       if (ngood ne 0L) then oplot, (*sensinfo[k].bandwave)[good], diff[good], ps=8
+;      if (nbad ne 0L) then oplot, (*sensinfo[k].bandwave)[bad], diff[bad], ps=7, syms=2.0
+    endfor
+    oplot, [!x.crange[0],!x.crange[1]], [0,0], line=0, thick=thick, color=fsc_color('white',!d.table_size-25)
+
+; sensitivity function plot.  apply the zero point shift in the plot
+; by just shifting YRANGE
+
+    mnmx = max(fitsens-zptshift)-min(fitsens-zptshift)
+    yrange = [min(fitsens-zptshift)-mnmx*0.30,max(fitsens-zptshift)+mnmx*0.30]
+;   yrange = minmax(fitsens-zptshift)*[1.0/1.001,1.018]
+
+    plot, [0], [0], xsty=3, ysty=11, ytitle=textoidl('2.5 log [Counts s^{-1} '+$
+      angstrom()+'^{-1}] / ['+flam_units()+']'), charsize=1.1, charthick=thick, $
+      yrange=yrange, xthick=thick, ythick=thick, position=[0.13,0.35,0.88,0.95], $
+      xtickname=replicate(' ',10), xrange=minmax(fitwave), /noerase, $
+      title=senstitle, color=fsc_color('white',!d.table_size-25)
+    axis, yaxis=1, ysty=3, ythick=thick, charthick=thick, charsize=1.1, $
+      yrange=yrange, ytitle=textoidl('2.5 log [Counts s^{-1} '+angstrom()+'^{-1}] / ['+flam_units()+']'), $
+      color=fsc_color('white',!d.table_size-25)
+    for k = 0L, nstds-1L do begin
+       im_symbols, info[k].psym, color=fsc_color(info[k].color,!d.table_size-k-2), fill=1
+       good = where(*sensinfo[k].bandmask eq 1B,ngood,comp=bad,ncomp=nbad)
+       if (ngood ne 0L) then oplot, (*sensinfo[k].bandwave)[good], (*sensinfo[k].sens)[good], ps=8
+;      if (nbad ne 0L) then oplot, (*sensinfo[k].bandwave)[bad], (*sensinfo[k].sens)[bad], ps=7, syms=2.0
+    endfor
+    oplot, senswave, sensfit, line=0, thick=thick, color=fsc_color('white',!d.table_size-25)
+    
+; overplot the b-spline breakpoints
+
+;   djs_oplot, bkpt, interpol(sensfitlog,senswave,bkpt), psym=7, syms=2
+
+    im_legend, ['b-spline '+strn(long(bsorder_sens)),'order '+$
+      strn(nord_sens),strn(nstds)+' stars',$
+      'ZP Shift = '+string(zptshift,format='(G0.0)')+' mag', $
+      greyleg], /left, /top, box=0, charsize=1.3, charthick=thick, $
+      textcolor=fsc_color('white',!d.table_size-25)
+
+    im_legend, [textoidl('\Delta')+' = '+string(mean(residuals),format='(F6.3)')+' (mag)',$
+      textoidl('\sigma_{\Delta}')+' = '+string(stddev(residuals),format='(F6.3)')+' (mag)',$
+      'Mean Scatter = '+string(stddev(percent_residuals),format='(F5.1)')+'%'], $
+;     'Max  Scatter = '+string(max(abs(percent_residuals)),format='(F4.1)')+'%'], $
+;     'Scatter = '+string((10.0^stddev(residuals)-1)*100.0,format='(F4.1)')+'%'], $
+      /right, /top, box=0, charsize=1.3, charthick=thick, textcolor=fsc_color('white',!d.table_size-25)
+
+; choose the most deviant stars and put them on the legend in reverse
+; deviance order!
+
+    indx = (reverse(sort(maxdev)))[0:4<(nstds-1L)]
+    
+    c = lonarr(n_elements(indx))
+    for k = 0L, n_elements(indx)-1L do c[k] = fsc_color(info[indx[k]].color,!d.table_size-k-2)
+    
+;   label = string('Star',format='(A'+strn(max(strlen(info[indx].starname)))+')')+$
+;     ' Date      '+strn('',length=7)+strn('',length=7)+strn('',length=5)
+    starlabel = string(info[indx].id,format='(I3)')+' '+$
+      info[indx].starname+' '+info[indx].date+' '+$
+      string(info[indx].airmass,format='(F7.4)')+' '+$
+      string(info[indx].greyshift,format='(F7.4)')+' '+$
+      string(info[indx].seeing,format='(F5.3)')+' '+$
+      string(100*info[indx].energy,format='(I3)')+'%'
+    
+    im_legend, [starlabel], /right, /bottom, box=0, charsize=1.0, charthick=thick, $
+      textcolor=c, color=c, psym=info[indx].psym
+;     textcolor=[fsc_color('white',200),c], color=[fsc_color('white',200),c], psym=[-1,info[indx].psym]
+
+return
+end
+
+function starsearch, ra, dec, stdpath=stdpath, stdfile=stdfile, star=star, _extra=extra
+
+    rootpath = filepath('',root_dir=getenv('ISPEC_DIR'),subdirectory='standards')
+    readcol, rootpath+'SUPPORTED', path, format='A', /silent
+;   path = ['calspec','spec50cal','oke1990','ctionewcal','bessell1999']
+    npath = n_elements(path)
+    indx = lindgen(npath)
+    
+    w = where(strmatch(path,'*'+stdpath+'*',/fold_case) eq 1B)
+    remove, w, indx
+
+    path = path[indx]
+    npath = n_elements(path)
+
+; search in each standard star path
+
+    for k = 0L, npath-1L do begin
+
+       starinfo = mrdfits(rootpath+path[k]+'/'+'table_info.fits',1,/silent)
+       
+       ntot = djs_angle_match(ra,dec,starinfo.ra,starinfo.dec,mindx=mindx,$
+         mdist=mdist,_extra=extra)
+
+       if (ntot eq 1L) then begin
+          print, 'found in '+path[k]+'.'
+          stdfile = path[k]+'/'+strn(starinfo[mindx].file)
+          star = strcompress(strupcase(starinfo[mindx].star),/remove)
+          return, mindx
+       endif
+
+    endfor
+    
+return, mindx
+end
+
+function isensfunc, stdlist, datapath=datapath, stdpath=stdpath, sensname=sensname, $
+  extfile=extfile, bsorder_sens=bsorder_sens, nord_sens=nord_sens, zptshift=zptshift, $
+  senstitle=senstitle, grey=grey, searchrad=searchrad, doplot=doplot, write=write, $
+  telluric=telluric, _extra=extra
+
+    nstds = n_elements(stdlist)
+    if nstds eq 0L then begin
+       print, 'Syntax - info = isensfunc(stdlist,datapath=,stdpath=,sensname=, $'
+       print, '   extfile=,bsorder_sens=,nord_sens=,zptshift=,senstitle=,grey=,$'
+       print, '   searchrad=,_extra=extra,/doplot,/write,/telluric'
+       return, -1L
+    endif
+
+    if n_elements(stdpath) eq 0L then stdpath = 'calspec'
+    if n_elements(datapath) eq 0L then datapath = cwd()
+    if n_elements(nord_sens) eq 0L then nord_sens = 3L
+    if n_elements(bsorder_sens) eq 0L then bsorder_sens = 20.0 else $
+      bsorder_sens = float(bsorder_sens)
+
+    if n_elements(zptshift) eq 0L then zptshift = 0.0 ; [mag]
+    
+    if n_elements(searchrad) eq 0L then searchrad = 120.0 ; [arcsec]
+    if n_elements(senstitle) eq 0L then senstitle = ''
+    if n_elements(senstitle) ne 1L then senstitle = senstitle[0] ; this error arose jm04sep10uofa
+
+    if n_elements(grey) eq 0L then grey = 1L else grey = long(grey)
+    if (grey ne 1L) and (grey ne 2L) then grey = 1L
+
+    if n_elements(sensname) eq 0L then sensname = 'sensfunc.fits'
+    greysensname = repstr(sensname,'.fits','_grey.fits')
+    
+    sensroot = strmid(sensname,0,strpos(sensname,'.fits'))
+    psname = datapath+'qaplot_'+sensroot+'.ps'
+    greypsname = repstr(psname,'.ps','_grey.ps')
+    
+; read the extinction file
+    
+    if n_elements(extfile) eq 0L then extfile = 'kpnoextinct.dat'
+    etcpath = filepath('',root_dir=getenv('ISPEC_DIR'),subdirectory='etc')
+
+    if file_test(etcpath+extfile,/regular) eq 0L then begin
+       splog, 'Extinction file '+etcpath+extfile+' not found.'
+       return, -1L
+    endif
+    
+    splog, 'Reading the extinction file '+etcpath+extfile+'.'
+    readcol, etcpath+extfile, extwave, extvals, format='F,F', /silent
+
+    if keyword_set(write) then openw, lun, datapath+'qalog_'+sensroot+'.datalog', /get_lun
+    
+    info = {$
+      id: 0L, $
+      specname: '', $
+      starname: '' , $
+      tablename: '' , $
+      date: '', $
+      jd: 0D, $                 ; julian date
+      ra: 0D, $                 ; decimal degrees
+      dec: 0D, $                ; decimal degrees
+      minwave:  0.0, $
+      maxwave:  0.0, $
+      dwave:    0.0, $
+      exptime:  0.0, $
+      airmass:  0.0, $
+      pa:  0.0, $
+      parangle:  0.0, $
+      seeing:   -1.0, $          ; arcsec
+      energy:   -1.0, $
+      greyshift: 0.0, $
+      greywave: 0.0, $
+      senszero: 0.0, $
+      psym: 0, $
+      color: ''}
+    info = replicate(info,nstds)
+
+    sensinfo = {$
+      bandwave: ptr_new(), $
+      sens:     ptr_new(), $
+      bandmask: ptr_new(), $
+      nbins:    0L}
+    sensinfo = replicate(sensinfo,nstds)
+
+    rootpath = filepath('',root_dir=getenv('ISPEC_DIR'),subdirectory='standards')
+    splog, 'Stellar template path '+rootpath+stdpath+'.'
+    if file_test(rootpath+stdpath,/directory) eq 0L then begin
+       splog, 'Input STDPATH does not exist . . . setting to calspec.'
+       stdpath = 'calspec'
+    endif
+    starinfo = mrdfits(rootpath+stdpath+'/table_info.fits',1,/silent)
+
+; initialize some telluric variables
+
+    if keyword_set(telluric) then begin
+
+       splog, 'Constructing the telluric correction spectrum.'
+       
+       tellwave1 = 6800.0 ; starting wavelength [A]
+       tellwave2 = 7000.0 ; ending wavelength [A]
+       telldwave = 1.0    ; dispersion [A/pixel]
+       
+       tellwave = findgen((tellwave2-tellwave1)/telldwave+1)*telldwave+tellwave1
+       tellspec = make_array(n_elements(tellwave),nstds,/float)
+
+       mkhdr, telluric_header, tellwave
+       sxdelpar, telluric_header, 'COMMENT' & sxdelpar, telluric_header, 'DATE'
+       sxaddpar, telluric_header, 'CRVAL1', tellwave1, ' central wavelength of first pixel'
+       sxaddpar, telluric_header, 'CD1_1', telldwave, ' dispersion [Angstrom/pixel]'
+       sxaddpar, telluric_header, 'CRPIX1', 1, ' starting pixel (1-indexed)'
+       sxaddpar, telluric_header, 'CTYPE1', 'LINEAR'
+       sxaddpar, telluric_header, 'DC-FLAG', 0, ' log-linear flag'
+       sxaddhist, "'Telluric correction spectrum generated "+im_today()+"'", telluric_header
+       
+    endif
+
+    finerpix = 10.0   ; oversampling factor
+    sensres = 10.0    ; resolution of the output sensitivity function [Angstrom]
+    
+; loop on each standard star observation
+
+    for i = 0L, nstds-1L do begin
+
+       if file_test(datapath+stdlist[i],/regular) eq 0L then begin
+          splog, datapath+stdlist[i]+' not found.'
+          cleansens, sensinfo
+          return, -1L
+       endif
+
+       info[i].id = i
+       info[i].specname = stdlist[i]
+
+       print, format='("Reading ",A0," . . . ",$)', info[i].specname
+       
+; read the spectrum
+       
+       counts = mrdfits(datapath+info[i].specname,0,header,/silent)
+       error = headcheck(header)
+       if error eq 0L then message, $
+         'Incomplete header information (OBJECT,CRVAL1,CD1_1,NAXIS1,EXPTIME,AIRMASS,PARANGLE).'
+       
+       wave = make_wave(header)
+       npix = n_elements(wave)
+
+; fill the info structure with header information
+
+       jd = sxpar(header,'JD')
+       date = jd2fitsdate(jd)
+       
+       info[i].starname = strcompress(strupcase(sxpar(header,'OBJECT')),/remove)
+       info[i].date = date
+       info[i].jd = jd
+       info[i].ra = 15.0*im_hms2dec(sxpar(header,'RA'))
+       info[i].dec = im_hms2dec(sxpar(header,'DEC'))
+       info[i].minwave = float(sxpar(header,'CRVAL1'))
+       info[i].dwave = float(sxpar(header,'CD1_1'))
+       info[i].maxwave = float(info[i].minwave + info[i].dwave * (sxpar(header,'naxis1')-1.0))
+       info[i].exptime = float(sxpar(header,'EXPTIME'))
+       info[i].airmass = float(sxpar(header,'AIRMASS'))
+       info[i].parangle = float(sxpar(header,'PARANGLE'))
+       pa = sxpar(header,'PA',count=pacount)
+       if pacount eq 1L then info[i].pa = float(pa)
+       
+; compute the seeing.  check to make sure the two-dimensional image is
+; in the same path, otherwise set the seeing to -1.0
+
+;      splog, 'Computing the seeing for '+info[i].specname+'.'
+       wname = 'w'+sxpar(header,'IWAVE')
+       if file_test(datapath+wname,/regular) then begin
+          iseeing, wname, seeing=seeing, energy=energy, /silent, doplot=0, _extra=extra
+          info[i].seeing = djs_mean(seeing)
+          info[i].energy = djs_mean(energy)
+       endif
+       
+       if keyword_set(write) then printf, lun, info[i].starname, info[i].specname
+       print, format='(A0,$)', info[i].starname
+
+; extinction correct to zero airmass 
+       
+       extinct = interpol(extvals,extwave,wave,/quadratic)
+       truecounts = counts * 10.0D^(0.4D*info[i].airmass*extinct)
+
+; search for the current standard star and read it.  search radius is
+; SEARCHRAD
+
+       ntot = im_djs_angle_match(info[i].ra,info[i].dec,starinfo.ra,starinfo.dec,$
+         dtheta=searchrad/3600.0,units='degrees',mcount=mcount,mindx=mindx,mdist=mdist)
+       
+       case long(ntot) of
+          0L: begin
+             print, format='(" . . . no standard star match in ", A0, " . . . ",$)', stdpath
+             mindx = starsearch(info[i].ra,info[i].dec,dtheta=searchrad/3600.0,$
+               units='degrees',stdpath=stdpath,stdfile=stdfile,star=star)
+             if (mindx[0] eq -1L) then begin
+                splog, 'Star '+info[i].starname+' '+info[i].specname+' not found.'
+                cleansens, sensinfo
+                return, -1L
+             endif
+             info[i].tablename = star
+          end
+          1L: begin
+             print, ' . . . found '+strn(starinfo[mindx].star)+'.'
+             info[i].tablename = strcompress(strupcase(starinfo[mindx].star),/remove)
+             stdfile = stdpath+'/'+strn(starinfo[mindx].file)
+          end
+          2L: begin
+             splog, 'Multiple stars found for '+info[i].starname+' '+info[i].specname+'.'
+             cleansens, sensinfo
+             return, -1L
+          end
+       endcase
+
+; all the standard star data files have the same format
+; (UPDATE_STANDARDS_DATABASE)
+
+       readcol, rootpath+stdfile, bandwave, stdmag, binsize, comment='#', /silent
+       nbands = n_elements(bandwave)
+
+       bandstart = bandwave - binsize/2.0
+       bandend = bandwave + binsize/2.0
+
+; reject bandpasses that are outside of the spectral range as well as
+; bandpasses affected by telluric absorption
+
+       tmask = telluric_mask(wave,good=tfree,bad=tbad)
+
+       telluric_bandmask = bytarr(nbands)+1B ; 1B is good
+       for iband = 0L, nbands-1L do begin
+          inband = where((wave gt bandstart[iband]) and (wave lt bandend[iband]),ninband)
+          if (ninband eq 0L) then telluric_bandmask[iband] = 0B else $
+            if total((tmask[inband] eq 0B)) ne 0.0 then telluric_bandmask[iband] = 0B
+       endfor
+
+       good = where((bandstart gt min(wave)) and (bandend lt max(wave)),nbins)
+
+       bandwave = bandwave[good]
+       bandstart = bandstart[good]
+       stdmag = stdmag[good]
+       bandend = bandend[good]
+       binsize = binsize[good]
+       telluric_bandmask = telluric_bandmask[good]
+
+       stdflux = 10D^(-0.4*(stdmag+48.59D)) * 2.99793D18 / bandwave / bandwave ; [erg/s/cm2/A]
+       extband = interpol(extvals,extwave,bandwave,/quadratic)
+
+       sensinfo[i].nbins = nbins
+       sensinfo[i].bandwave = ptr_new(bandwave)
+       sensinfo[i].bandmask = ptr_new(telluric_bandmask)
+       
+; sum the counts in each bin using partial pixels and construct the
+; sensitivity curve
+
+       sens = fltarr(nbins)
+       for j = 0L, nbins-1L do begin
+
+          wavearray = bandstart[j] + findgen(binsize[j]*finerpix)/finerpix + 1.0/finerpix/2.0
+          
+          bincounts = interpol(truecounts,wave,wavearray)
+          starcounts = total(bincounts)/binsize[j]/finerpix
+
+          sens[j] = 2.5*alog10(starcounts / info[i].exptime / info[i].dwave / stdflux[j])
+          
+          if keyword_set(write) then printf, lun, bandwave[j], stdflux[j], starcounts
+
+       endfor
+       
+       sensinfo[i].sens = ptr_new(sens)
+       
+; determine the telluric correction by fitting a line to the
+; telluric-free region of the spectrum
+
+       if keyword_set(telluric) then begin
+
+          tellfreespec = counts
+          
+          tellmask = telluric_mask(wave,bband=bband,bfreeband=bfreeband)
+          if (bband[0] eq -1L) or (bfreeband[0] eq -1.0) then begin
+
+             if (bband[0] eq -1L) then splog, 'No telluric absorption in the wavelength range.'
+             if (bfreeband[0] eq -1L) then splog, 'No telluric-free continuum in the wavelength range.'
+
+; I need more error catching
+             
+             message, 'Insufficient error handling here.'
+             
+          endif else begin
+
+; fit a robust linear function to the telluric-free continuum
+
+             coeff = robust_linefit(wave[bfreeband],tellfreespec[bfreeband],yfit)
+             tellfreespec[bband] = poly(wave[bband],coeff)
+
+             tcontinuum = counts/tellfreespec
+             linterp, wave, tcontinuum, tellwave, tellspeci, missing=1.0
+             tellspec[*,i] = tellspeci
+
+;            plot, wave, counts, xsty=3, ysty=3, xrange=[6800,6900], ps=10
+;            djs_oplot, wave, tellfreespec, ps=10, thick=thick, color='red'
+;            cc = get_kbrd(1)
+             
+          endelse
+
+       endif
+          
+    endfor 
+
+; construct the median telluric spectrum
+
+    if keyword_set(telluric) then begin
+
+       if (nstds gt 1L) then $
+         telluric_spectrum = djs_median(tellspec,2) else $
+         telluric_spectrum = tellspec
+
+       if keyword_set(doplot) then begin
+          window, 1, xsize=350, ysize=350
+          plot, tellwave, telluric_spectrum, xsty=3, ysty=3, thick=3.0, $
+            xrange=[6830,6950], ps=10, charsize=1.2, charthick=2.0, xthick=2.0, $
+            ythick=2.0, xtitle='Wavelength ['+angstrom()+']', ytitle='Ratio'
+          for j = 0L, nstds-1L do djs_oplot, tellwave, tellspec[*,j], color='cyan', ps=10
+       endif
+
+    endif
+    
+; assign plot symbols and colors
+
+    colorfile = etcpath+'starcolors.dat'
+    if file_test(colorfile,/regular) then begin
+       readcol, colorfile, colorstar, color, format='A,A', /silent 
+    endif else begin
+       splog, 'Star color file '+colorfile+' not found.'
+       cleansens, sensinfo
+       return, -1L
+    endelse
+       
+    srt = sort(info.tablename)
+    unique = uniq(info.tablename,srt)
+    nuniq = n_elements(unique)
+    psymvec = 104 + lindgen(nuniq) ; assign plot symbols
+    
+    for k = 0L, nuniq-1L do begin
+       w = where(strmatch(info.tablename,info[unique[k]].tablename,/fold_case) eq 1B,nw)
+       info[w].psym = psymvec[k]
+       colorw = where(strmatch(colorstar,info[unique[k]].tablename,/fold_case) eq 1B,nc)
+       if (nc eq 0L) then $
+         message, 'No color star match for '+info[unique[k]].tablename, /info else $
+         info[w].color = color[colorw[0]]
+    endfor
+    
+    if keyword_set(write) then free_lun, lun ; close the data log file
+
+; fit, write out, and plot the observed sensitivity function 
+
+    splog, 'Fitting a b-spline to the observed sensitivity curve.'
+    splog, 'Zero-point shift = '+string(zptshift,format='(G0.0)')+' mag.'
+    sensfuncfit, sensinfo, bsorder_sens, nord_sens, sensres, $
+      _extra=extra, fitsens, fitwave, coarsefit, senswave, $
+      sensfit, sensfiterr, sset
+
+    if keyword_set(write) then begin
+       write_sensfuncfit, info, senswave, sensfit, sensfiterr, sensres, $
+         datapath+sensname, zptshift, telluric_spectrum=telluric_spectrum, $
+         telluric_header=telluric_header, histnote='Observed Sensitivity Function'
+    endif
+
+    if keyword_set(doplot) then begin
+       window, 0, xs=500, ys=500 
+       sensfuncplot, sensinfo, info, fitsens, fitwave, coarsefit, senswave, sensfit, $
+         sensfiterr, bsorder_sens, nord_sens, sset, zptshift, greyleg='No Grey Shift', $
+         senstitle=senstitle, thick=2.0
+    endif
+
+; generate postscript output of the observed sensitivity function 
+    
+    if keyword_set(write) then begin
+
+       splog, 'Writing '+psname+'.'
+
+       dfpsplot, psname, /square, /color, /isolatin1
+
+       sensfuncplot, sensinfo, info, fitsens, fitwave, coarsefit, senswave, sensfit, $
+         sensfiterr, bsorder_sens, nord_sens, sset, zptshift, greyleg='No Grey Shift', $
+         senstitle=senstitle, residuals=resid, thick=8.0
+
+       dfpsclose
+
+    endif
+    
+; compute some numbers for grey-shifting.  calculate the median
+; sensitivity centered on the bin nearest to the average wavelength of
+; all the standards, plus or minus one bin.  this procedure should
+; make the shift independent of the wavelength range of the data, and
+; impervious to bad bins from cosmic rays; account for masked
+; bandpasses 
+
+    gwave = (djs_mean(info.maxwave)-djs_mean(info.minwave))/2.0+djs_mean(info.minwave)
+    info.greywave = gwave
+
+    for i = 0L, nstds-1L do begin
+       good = where(*sensinfo[i].bandmask eq 1L)
+       get_element, (*sensinfo[i].bandwave)[good], gwave, xx
+       info[i].senszero = median(((*sensinfo[i].sens)[good])[xx-1L:xx+1L])
+;      info[i].senszero = interpol(*sensinfo[i].sens,*sensinfo[i].bandwave,5556.0)
+    endfor
+
+    maxsens = max(info.senszero,maxindx)  ; maximum sensitivity 
+    meansens = djs_mean(info.senszero) ; mean sensitivity
+
+    print, format='("Grey-shifting ",A0, " standards centered on ", A0, " Angstrom to the",$)', $
+      strn(nstds), string(gwave,format='(I4)')
+    
+    if (grey eq 1L) then begin  ; grey-shift to the maximum sensitivity
+       print, ' maximum sensitivity.'
+       info.greyshift = info[maxindx].senszero-info.senszero
+       greyleg = 'Maximum Grey Shift' & ghistnote = 'Maximum'
+    endif
+    
+    if (grey eq 2L) then begin  ; grey-shift to the mean sensitivity
+       print, ' mean sensitivity.'
+       info.greyshift = meansens-info.senszero
+       greyleg = 'Mean Grey Shift' & ghistnote = 'Mean'
+    endif
+
+; do the grey-shifting now
+    
+    for i = 0L, nstds-1L do begin
+
+       greysens = *sensinfo[i].sens + info[i].greyshift
+       ptr_free, sensinfo[i].sens & sensinfo[i].sens = ptr_new(greysens)
+
+    endfor
+
+; fit, write out, and plot the grey-shifted sensitivity function 
+
+    splog, 'Fitting a b-spline to the grey-shifted sensitivity curve.'
+    splog, 'Zero-point shift = '+string(zptshift,format='(G0.0)')+' mag.'
+    sensfuncfit, sensinfo, bsorder_sens, nord_sens, sensres, $
+      _extra=extra, fitsens, fitwave, coarsefit, senswave, $
+      sensfit, sensfiterr, sset
+
+    if keyword_set(write) then begin
+       write_sensfuncfit, info, senswave, sensfit, sensfiterr, sensres, $
+         datapath+greysensname, zptshift, telluric_spectrum=telluric_spectrum, $
+         telluric_header=telluric_header, histnote=ghistnote+' Grey-Shifted Sensitivity Function'
+    endif
+
+    if keyword_set(doplot) then begin
+       window, 2, xs=500, ys=500 
+       sensfuncplot, sensinfo, info, fitsens, fitwave, coarsefit, senswave, sensfit, $
+         sensfiterr, bsorder_sens, nord_sens, sset, zptshift, greyleg=greyleg, $
+         senstitle=senstitle, thick=2.0
+    endif
+    
+; generate postscript output of the grey-shifted sensitivity function 
+    
+    if keyword_set(write) then begin
+
+       splog, 'Writing '+greypsname+'.'
+
+       dfpsplot, greypsname, /square, /color, /isolatin1
+
+       sensfuncplot, sensinfo, info, fitsens, fitwave, coarsefit, senswave, sensfit, $
+         sensfiterr, bsorder_sens, nord_sens, sset, zptshift, greyleg=greyleg, $
+         senstitle=senstitle, residuals=greyresid, thick=8.0
+
+       dfpsclose
+
+    endif
+
+; crop the output information structure to only useful fields
+
+    outinfo = struct_trimtags(info,select=['SPECNAME','STARNAME','TABLENAME','DATE',$
+      'JD','AIRMASS','PA','PARANGLE','SEEING','ENERGY','GREYSHIFT','SENSZERO',$
+      'PSYM','COLOR'])
+    
+    if keyword_set(write) then begin 
+
+; compute residuals of the fit
+       
+       residstr = string(djs_mean(resid),format='(F10.7)')+', '+$
+         string(djs_median(resid),format='(F10.7)')+', '+$
+         string(min(resid),format='(F10.7)')+', '+$
+         string(max(resid),format='(F10.7)')+', '+$
+         string(stddev(resid),format='(F10.7)')
+
+       if n_elements(grey) ne 0L then $
+         greyresidstr = string(djs_mean(greyresid),format='(F10.7)')+', '+$
+         string(djs_median(greyresid),format='(F10.7)')+', '+$
+         string(min(greyresid),format='(F10.7)')+', '+$
+         string(max(greyresid),format='(F10.7)')+', '+$
+         string(stddev(greyresid),format='(F10.7)') else $
+         greyresidstr = string(0.0,format='(F10.7)')+', '+$
+         string(0.0,format='(F10.7)')+', '+string(0.0,format='(F10.7)')+', '+$
+         string(0.0,format='(F10.7)')+', '+string(0.0,format='(F10.7)')
+
+; write the log file
+
+       openw, lun, datapath+'qalog_'+sensroot+'.log', /get_lun
+       printf, lun, '# ISENSFUNC log file '+im_today()
+       printf, lun, '# Starting and ending wavelength: '+string(minmax(senswave),$
+         format='(F7.2,2x,F7.2)')
+       printf, lun, '# b-spline fit (order,nbkpoints): '+strn(nord_sens,length=3)+', '+$
+         strn(n_elements(sset.fullbkpt),length=3)
+       printf, lun, '# '+greyleg
+       printf, lun, '# (1) SPECNAME; (2) STARNAME; (3) TABLENAME; (4) DATE; (5) JD; (6) AIRMASS; (7) PA; '
+       printf, lun, '# (8) PARANGLE; (9) SEEING; (10) ENERGY; (11) GREYSHIFT; (12) SENSZERO; (13) PSYM; (14) COLOR'
+       printf, lun, '# Observed Residuals   (Mean, Median, Min, Max, Stdv): '+residstr
+       printf, lun, '# Grey-Shift Residuals (Mean, Median, Min, Max, Stdv): '+greyresidstr
+       printf, lun, '# '
+       struct_print, outinfo, lun=lun, /no_head
+       free_lun, lun    
+       
+    endif
+
+    if keyword_set(doplot) then struct_print, struct_trimtags(info,select=$
+      ['ID','SPECNAME','STARNAME','TABLENAME','DATE','AIRMASS','PA','PARANGLE',$
+      'SEEING','ENERGY','GREYSHIFT','SENSZERO'])
+
+    cleansens, sensinfo ; cleanup memory
+    
+return, info
+end

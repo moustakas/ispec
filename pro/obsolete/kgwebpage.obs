@@ -1,0 +1,372 @@
+;+
+; NAME:
+;	KGWEBPAGE
+;
+; PURPOSE:
+;	Generate web page visualizations for ISPEC.
+;
+; CALLING SEQUENCE:
+;       kgwebpage, logbase, [rootname=, red_path=, $
+;          html_path=], /doskysub, /dispskysub, /html_only, $
+;          /cleanpng
+;
+; INPUTS:
+;       logbase - base filename for the webpages; this program will
+;                 create both a logbase.html and logbase directory.
+;
+; OPTIONAL INPUTS:
+;	rootname - root filename of the reduced 2D images.  The
+;                  default is 'fdw'
+;
+;	red_path   - path to reduced data (default './Red')
+;	html_path  - path where html and png files should be written 
+;                    (default './WWW')
+;
+; KEYWORD PARAMETERS:
+;	doskysub   - create and display sky subtracted 2D images (see
+;                    ISPEC for details; the sky subtracted 2D image is
+;                    written to RED_PATH with a 's' prepended to the
+;                    filename)
+;	dispskysub - display sky subtracted 2D images; assumes the
+;                    images were created previously with DOSKYSUB;
+;                    useful when a few of the sky subtacted images
+;                    created with DOSKYSUB are redone with the SKYSUB
+;                    program with the SKYTOP keyword
+;	html_only  - only create html files, do not create png images;
+;                    useful for quickly updating html files
+;       logscale   - display the images with a logarithmic scaling
+;                    (default is 1/4 scaling)
+;       cleanpng   - delete all .PNG files in HTML_PATH/LOGBASE
+;
+; OUTPUTS:
+;	A main HTML summary file with a single image for each
+;	observation.  This image is accompanied by some basic
+;	information about the observation and includes a link to
+;	another HTML file with multiple images for this observation
+;	(original image, crcleaned image, etc.).
+;
+; PROCEDURES USED:
+;       ISPEC, KGCREATE_PNG
+;
+; EXAMPLE:
+;
+; MODIFICATION HISTORY:
+; 	Written by:	Karl D. Gordon, Dec 2002.
+;                       Based on earlier programs written for optical
+;                       and near-infrared imaging reductions.
+;       16 Apr 2003     KDG
+;                       Updated to include documentation and to allow
+;                       nonKDG standard reduction directories.
+;       2003 July 15    J. Moustakas, major re-organization 
+;-
+
+pro kgwebpage, logbase, rootname=rootname, red_path=red_path, $
+  html_path=html_path, doskysub=doskysub, dispskysub=dispskysub, $
+  html_only=html_only, logscale=logscale, cleanpng=cleanpng
+
+    nlogbase = n_elements(logbase)
+    if nlogbase eq 0L then begin
+       print, 'Syntax - kgwebpage, logbase, [rootname=, red_path=, $'
+       print, '   html_path=], /doskysub, /dispskysub, /html_only, $'
+       print, '   /cleanpng'
+       return
+    endif
+    
+    if (not keyword_set(rootname)) then rootname = 'fdw'
+
+    if keyword_set(doskysub) then dispskysub = 1
+    if n_elements(html_path) eq 0L then html_path = './WWW/'
+    if n_elements(red_path) eq 0L then red_path = './Red/'
+
+    ss_scale = 1 ; default scaling is square root
+    
+    int_range = 0
+
+    files = findfile(red_path+rootname+'*.fits')
+    print, red_path+rootname+'*.fits'
+    n_files = n_elements(files)
+
+; extract string
+
+    raw_files = strarr(n_files)
+    times = fltarr(n_files)
+    dates = strarr(n_files)
+
+    for i = 0,(n_files-1) do begin
+       test_str = strmid(red_path,0,2) ; jm03apr16
+;      test_str = 'Red/'
+       slash_pos = strpos(files[i],test_str)
+       start_pos = slash_pos + strlen(test_str)
+       ext_len = strlen(files[i])-slash_pos-strlen(test_str)-5
+       files[i] = strmid(files[i],start_pos,ext_len)
+
+       openr, unit2, red_path+files[i]+'.fits',/get_lun
+       fxhread, unit2, header
+       free_lun, unit2
+       dates[i] = fxpar(header,'DATE-OBS')
+       times[i] = str2time(fxpar(header,'UT'))
+    endfor
+
+    uindxs = uniq(dates,sort(dates))
+    n_uindxs = n_elements(uindxs)
+
+    if (n_uindxs GT 1) then begin
+       new_files = files
+       k1 = 0
+       for i = 0,(n_uindxs-1) do begin
+          indxs = where(dates EQ dates[uindxs[i]],n_indxs)
+          sindxs = sort(times[indxs])
+          new_files[k1:k1+n_indxs-1] = files[indxs[sindxs]]
+          k1 = k1 + n_indxs
+       endfor
+       files = new_files
+    endif else begin
+       sindxs = sort(times)
+       files = files[sindxs]
+    endelse
+
+; --------------------------------------------------
+    if (not file_test(html_path,/directory)) then begin
+       print,'mkdir ' + html_path
+       spawn,'mkdir ' + html_path
+    endif
+    
+    if (not file_test(html_path+logbase+'/',/directory)) then begin
+       print,'mkdir ' + html_path + logbase
+       spawn,'mkdir ' + html_path + logbase
+    endif
+; --------------------------------------------------
+
+;   if (not file_test(html_path+logbase+'/',/directory)) then begin
+;      print,'mkdir ' + html_path + logbase
+;      spawn,'mkdir ' + html_path + logbase
+;   endif
+
+; remove PNG files
+
+    if keyword_set(cleanpng) then begin
+       print, 'Deleting all PNG files from '+html_path+logbase+'.'
+       spawn, ['rm -f '+html_path+logbase+'/*.png'], /sh
+    endif
+    
+    openw, unit1, html_path+logbase+'.html',/get_lun
+    printf, unit1, '<html>'
+    printf, unit1, '<head>'
+    printf, unit1, '<title>Visual Log for '+logbase+'</title>'
+    printf, unit1, '</head>'
+    printf, unit1, '<body>'
+    printf, unit1, ''
+    printf, unit1, '<h1 align="center">Visual Log for '+logbase+'</h1>'
+    printf, unit1, ''
+    printf, unit1, '<table align="center" cellpadding="2" border="2">'
+    printf, unit1, '<tbody>'
+
+    n_cols = 0
+    max_cols = 1
+
+    for i = 0, n_files-1L do begin
+
+       print,'working on ' + files[i] + '...'
+       if (file_test(red_path+files[i]+'.fits')) then begin
+
+; read the header of the reduced file
+
+          openr, unit2, red_path+files[i]+'.fits', /get_lun
+          fxhread, unit2, header
+          free_lun, unit2
+
+; determine the file history
+
+          incomb = fxpar(header,'INCOMB')
+          if (incomb GT 0) then begin
+             sub_files_str = strtrim(string(indgen(incomb)+1),2)
+             sub_files_str[0:min([incomb-1,9])] = '0' + sub_files_str[0:min([incomb-1,9])]
+             file_keywords = ['IWAVE','ICOMB'+sub_files_str,'IRAW'+sub_files_str]
+          endif else begin
+             file_keywords = ['IWAVE','IRAW']
+          endelse
+
+          junk = where(strmatch(file_keywords,'*RAW*'),nraw)
+          
+; compute the total exposure time
+
+          tot_exptime = fxpar(header,'EXPTIME')
+
+; create the HTML individual file
+
+          openw, unit2, html_path+logbase+'/'+files[i]+'.html', /get_lun
+          printf, unit2, '<html>'
+          printf, unit2, '<head>'
+          printf, unit2, '<title>Log page for '+files[i]+'</title>'
+          printf, unit2, '</head>'
+          printf, unit2, '<body>'
+          printf, unit2, ''
+          printf, unit2, '<h1 align=center>Log page for '+files[i]+'</h1>'
+          printf, unit2, ''
+
+          printf, unit2, '<p>'
+          printf, unit2, '<table align=center cellpadding=2 border>'
+          printf, unit2, '<tbody>'
+          printf, unit2, '<tr align=center>'
+          printf, unit2, '<th>object</th>'
+          printf, unit2, '<th>date</th><th>time</th><th>airmass</th><th>exptime</th>'
+          printf, unit2, '</tr>'
+          printf, unit2, '<tr>'
+          object = fxpar(header,'OBJECT',count=n_object)
+
+          if (n_object EQ 0) then object = '-'
+          printf, unit2, '<td>' + object + '</td>'
+          printf, unit2, '<td>' + fxpar(header,'DATE-OBS') + '</td>'
+          printf, unit2, '<td>' + fxpar(header,'UT') + '</td>'
+          printf, unit2, '<td>' + strtrim(string(fxpar(header,'AIRMASS'),format='(F5.2)'),2) + '</td>'
+          printf, unit2, '<td>' + strtrim(string(fxpar(header,'EXPTIME'),format='(F10.2)'),2) + '</td>'
+          printf, unit2, '</tr>'
+          printf, unit2, '</tbody>'
+          printf, unit2, '</table>'
+          printf, unit2, '</p>'
+
+          printf, unit2, '<p>'
+          printf, unit2, '<table align="center" cellpadding="2" border="1">'
+          printf, unit2, '<tbody>'
+
+; setup sub files
+
+          subfiles = [files[i],files[i]]
+          subfiles_ext = [0,2]
+          subfiles_str = ['calibrated','calibrated (mask)']
+
+; do sky subtraction if asked for
+
+          if (keyword_set(doskysub)) then begin
+             ispec, files[i]+'.fits', datapath=red_path, /skysub2d, /wfits, /silent ; <-- jm03apr16uofa
+;            kgskysub, files[i]+'.fits', path=red_path ; <-- jm03apr16uofa
+;            kgskysub, files[i]+'.fits'
+          endif
+
+          if (keyword_set(dispskysub)) then begin
+             subfiles = ['s'+files[i],subfiles]
+             subfiles_ext = [0,subfiles_ext]
+             subfiles_str = ['sky subtracted',subfiles_str]
+          endif
+
+; add in all the other subfiles
+
+          n_file_keywords = n_elements(file_keywords)
+
+          for j = 0,(n_file_keywords-1) do begin
+             tfile = strtrim(fxpar(header,file_keywords[j]),2)
+             tfile = strmid(tfile,0,strlen(tfile)-5)
+             if (j lt (n_file_keywords-nraw)) then begin
+                subfiles = [subfiles,tfile,tfile]
+                subfiles_ext = [subfiles_ext,0,2]
+                if (file_keywords[j] EQ 'IWAVE') then begin
+                   subfiles_str = [subfiles_str,'reduced, cosmic ray cleaned','reduced, cosmic ray cleaned (mask)']
+                endif else begin
+                   subfiles_str = [subfiles_str,'reduced','reduced (mask)']
+                endelse
+             endif else begin
+                subfiles = [subfiles,tfile]
+                subfiles_ext = [subfiles_ext,0]
+                subfiles_str = [subfiles_str,'raw']
+             endelse
+          endfor
+
+          n_subfiles = n_elements(subfiles)
+
+          for j = 0,(n_subfiles-1) do begin
+
+             if (file_test(red_path+subfiles[j]+'.fits')) then begin
+
+                if (subfiles_ext[j] EQ 2) then begin
+                   ext_str = '_mask'
+                   log_scale = 1 & ss_scale = 0
+                endif else begin
+                   ext_str = ''
+                   if keyword_set(logscale) then begin
+                      log_scale = 1 & sscale = 0
+                   endif else begin
+                      log_scale = 0 & ss_scale = 1
+                   endelse
+                endelse
+
+; always use log scaling for the raw images
+                
+                if (j ge n_subfiles-nraw) then begin
+                   log_scale = 1 & ss_scale = 0
+                endif 
+
+                png_file = subfiles[j]+ext_str+'.png'
+                png_file_tb = subfiles[j]+ext_str+'_tb.png'
+
+; generate PNG images of everything                
+                
+                if (not keyword_set(html_only)) then begin
+
+                   kgcreate_png, red_path+subfiles[j]+'.fits', html_path+logbase+'/'+png_file, $
+                     ss_scale=ss_scale, log_scale=log_scale, file_ext=subfiles_ext[j]
+
+                   kgcreate_png, red_path+subfiles[j]+'.fits', /thumbnail, html_path+logbase+'/'+png_file_tb, $
+                     ss_scale=ss_scale, log_scale=log_scale, file_ext=subfiles_ext[j]
+
+                endif
+
+                printf, unit2,'<tr>'
+                printf, unit2,'<td>'+subfiles_str[j] + ' (' + subfiles[j] + ')'
+                printf, unit2,'<br><a href="'+png_file+'"><img src="'+png_file_tb+'"></a></td>'
+                printf, unit2,'</tr>'
+
+             endif
+
+          endfor
+
+          printf, unit2, '</tbody>'
+          printf, unit2, '</table>'
+          printf, unit2, '</p>'
+          printf, unit2, '<hr>'
+;         printf, unit2, '<p>Page created by <a href="mailto:kgordon@as.arizona.edu">Karl</a>.'
+;         printf, unit2, 'Comments can be directed to him.'
+          printf, unit2, '</body>'
+          printf, unit2, '</html>'
+          free_lun, unit2
+          
+; add this observation to the log
+
+          png_file = logbase+'/'+subfiles[0]+'.png'
+          png_file_tb = logbase+'/'+subfiles[0]+'_tb.png'
+
+          if (n_cols EQ 0) then printf, unit1,'<tr align="center">'
+
+          printf, unit1, '<td>'
+          printf, unit1, '<a href="'+logbase+'/'+files[i]+'.html">' + files[i] + '</a>'
+          object = fxpar(header,'OBJECT',count=n_object)
+          if (n_object EQ 0) then object = '-'
+          printf, unit1, '<br />' + object
+          printf, unit1, '<br />' + fxpar(header,'DATE-OBS')
+          printf, unit1, '<br />' + fxpar(header,'UT')
+          printf, unit1, '<br /> airmass = ' + strtrim(string(fxpar(header,'AIRMASS'),format='(F5.2)'),2)
+          printf, unit1, '<br />' + strtrim(string(tot_exptime,format='(F10.2)'),2) + ' secs'
+          printf, unit1, '</td>'
+          printf, unit1, '<td>'
+          printf, unit1, '<a href="' + logbase+'/'+files[i]+'.html"> <img src="' + png_file_tb + '"></a>'
+          printf, unit1, '</td>'
+          n_cols = n_cols + 1
+          if (n_cols EQ max_cols) then begin
+             printf, unit1, '</tr>'
+             n_cols = 0
+          endif
+       endif
+    endfor
+
+    if (n_cols LT max_cols) then printf,unit1,'</tr>'
+
+    printf, unit1, '</tbody>'
+    printf, unit1, '</table>'
+    printf, unit1, '<hr>'
+;   printf, unit1, '<p>Page created by <a href="mailto:kgordon@as.arizona.edu">Karl</a>.'
+;   printf, unit1, 'Comments can be directed to him.'
+    printf, unit1, '</body>'
+    printf, unit1, '</html>'
+    free_lun, unit1
+
+return
+end

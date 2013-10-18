@@ -1,0 +1,52 @@
+J. Moustakas
+University of Arizona
+
+jm09mar12nyu 
+------------
+
+Spectrum zero-point changed to 48.6 (AB).
+
+jm05jun01uofa
+-------------
+
+Bessell's spectra in mJy were downloaded.  The final spectra were
+written in AB magnitudes using the routine WRITE_BESSELL99 in the
+SPECTRA sub-directory.  I did not use Bessell's files which have the
+fluxes tabulated in AB magnitudes because he assumes a zero-point of
+48.60, rather than 48.59 which Hamuy et al. (1994) assume, and I
+assume throughout iSPEC.  To convert from Bessell's milli-Jansky to AB
+magnitudes, let F=flux in mJy and m=AB magnitude, then
+
+   m_AB = -2.5 log (F*1E-29)-48.59
+
+Note that the eg21a.tab file on Bessell's website has a duplicate
+entry for 3300 Angstroms.
+
+BV photometry has been taken from the original paper, and matches the
+photometry in CTIONEWCAL.
+
+The last flux point in f110.tab was commented out because it involved
+an extrapolation.  So were the last three points in eg21.tab.  Fixed
+typos in l7379.tab on the fourth- and second-to-last wavelength
+points.  The last three wavelength points in l7987.tab were commented
+out to prevent extrapolation.
+
+
+jm05apr14uofa
+-------------
+
+Spectra renamed.  Information table converted to sextractor format and
+updated.
+
+jm03feb
+-------
+
+Bessell 1990, PASP, 111, 1426 
+
+Spectra obtained from http://www.mso.anu.edu.au/~bessell/FTP.  Only
+the faint spectrophotometric standards in Table 2 are included.  
+However, we exclude VMA 2, L745-46A, L745-46A, HD 140283, and EG 131.
+
+Spectra are in units of Angstroms and AB magnitude, in bandpasses of
+width 50 Angstroms.
+

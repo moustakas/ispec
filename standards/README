@@ -1,0 +1,24 @@
+jm07jun20nyu --- Downloaded and updated the Calspec (2006-Sep-01)
+database, which now includes stars spanning a wider color range.
+Also, the AB magnitude zero-point for Calspec and SPEC50CAL was
+changed to 48.6.
+
+jm05jun01uofa --- The CTIONEWCAL fluxed standards have now been
+superseeded by Bessell (1990), and should not be used.  All the
+standards in the "data" directory have been placed on a common AB
+magnitude system according to
+
+   m = -2.5 log (f_nu) - 48.59
+
+(Hamuy et al. 1994) **EXCEPT** Oke (1983).  Therefore, the Oke (1983)
+standards will have a 0.01 mag error in the absolute standard-star
+calibrations until I get around to fixing this.  The Oke (1990)
+standards were already on the appropriate AB magnitude system when I
+downloaded them from the site indicated in the README.  The "obsolete"
+directory now contains the CTIONEWCAL standards.  
+
+jm05apr14uofa --- The "data" directory contains the original and
+binned standard-star spectra.  The objects in the "standards"
+directory have been written by WRITE_STANDARDS_DATABASE to be a unique
+set of standard-star spectra.  Also see "ispec_standards.fits" in the
+standards directory.

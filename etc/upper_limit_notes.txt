@@ -1,0 +1,68 @@
+; place upper limits on undetected emission lines
+
+    snrcut = 1.0 ; 3.0
+    wsigma = 5.0 ; SIGMA*WSIGM = width of the restricted wavelength range
+    
+    ulimit = where((linefit.linearea_err eq -1.0) or $
+      (linefit.linearea/linefit.linearea_err lt snrcut),nulimit,$
+      comp=goodfit,ncomp=ngoodfit)
+    
+    if nulimit ne 0L then begin
+
+       linefit[ulimit].line_ulimit = 1B ; flag upper limits
+	  
+       if ngoodfit ne 0L then begin
+
+; median good emission-line redshift for the object based on the
+; emission lines
+	  
+	  medz = djs_median(linefit[goodfit].linez)
+
+; if the sigma-width of this line has been tied to another line then
+; use that sigma width to get an upper limit on the line flux.  if
+; not, find the nearest detected line in wavelength and compute the
+; expected sigma-width
+
+	  for k = 0L, nulimit-1L do begin
+
+	     uline = linefit[ulimit[k]]
+
+	     if (uline.linesigma ne 0.0) then begin
+
+		sigma = uline.linewave*(1+medz)*uline.linesigma/light
+
+	     endif else begin
+	     
+		junk = min(abs(uline.linewave-linefit[goodfit].linewave),indx)
+		line = linefit[goodfit[indx]]
+		sigmagood = line.linewave*(1+medz)*line.linesigma/light ; [Angstrom]
+
+		sigma = sigmagood*uline.linewave/line.linewave ; from L. Kewley's thesis [Angstrom]
+
+	     endelse
+
+; restrict the wavelength range
+
+	     get_element, wave, uline.linewave*(1+medz)+sigma*[-wsigma,+wsigma], xx
+
+; compute the rms amplitude and put the upper limit
+
+	     djs_iterstat, flux[xx[0]:xx[1]], sigma=rms
+	     linefit[ulimit[k]].linearea = snrcut*rms*sqrt(2.0*!pi)*sigma
+	     
+; evaluate a normalized Gaussian function, and compute the upper limit
+; on the line flux
+
+;            gfun = exp(-0.5D*((wave[xx[0]:xx[1]]-uline.linewave*(1+medz))/sigma)^2.0)/sqrt(2.0*!pi)/sigma
+;            linefit[ulimit[k]].linearea = snrcut*sqrt(total(gfun*var[xx[0]:xx[1]]))
+
+; the code below just sums the error in a box of width +/- 10-sigma
+	     
+;            gfun = 1.0
+;            linefit[ulimit[k]].linearea = snrcut*sqrt(total(gfun*var[xx[0]:xx[1]]))
+	     
+	  endfor
+       
+       endif 
+    
+    endif 

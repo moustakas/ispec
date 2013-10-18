@@ -1,0 +1,35 @@
+# Template input parameter file for IBATCH.
+
+DOPLOT             1                      # Boolean plotting flag
+GZIP               1                      # compress [1 means gzip output FITS files]
+BIASFILE           bias.fits              # master bias frame
+SATURATION         0                      # pixel saturation value [electron] [0 means do not check for saturated pixels]
+DOMEFILE           domeflat.fits          # master dome flat or file name
+DOMELIST           0                      # Boolean - 1 means DOMEFILE is a file name
+SKYFILE            skyflat.fits           # sky flat
+DARKFILE           dark.fits              # master dark frame
+ARCFILE            arclist_98mar21.txt    # arc lamp
+ARCLIST            1                      # Boolean - 1 means ARCFILE and WMAPNAME are file names
+LAMP               HeAr                   # type of comparison lamp
+FLATNAME           flat_98mar21.fits      # input/output flat field name
+ILLUMNAME          illum_98mar21.fits     # input/output illumation flat name
+WMAPNAME           wmap_98mar21.idlsave   # input/output wavelength map name
+TRACENAME          trace_98mar21.idlsave  # input/output trace structure
+SENSNAME           sens_98mar21.fits      # input/output sensitivity function name
+STDPATH            calspec                # subdirectory name of standard star files
+EXTFILE            kpnoextinct.dat        # extinction [mag/airmass] file name
+SKYSPECFILE                               # sky spectrum for wavelength cross-correlation
+BADPIXFILE         badpix.dat             # input bad pixel file
+GAIN               2.1                    # gain [electron/ADU]
+RDNOISE            5.5                    # read noise [electron]
+TRIM               3 1194 0 125           # trim region [zero-indexed]
+OVERSCAN           1202 1217 0 125        # overscan region [zero-indexed]
+PSCALE             1.66666                # spatial plate scale [arcsec/pixel]
+BSORDER_FLAT       50                     # b-spline order to the flat fit
+BSORDER_SENS       20                     # b-spline order to the sensitivity function fit
+MINWAVE_GUESS      3610.0                 # starting wavelength guess based on the grating used [Angstrom]
+MINWAVE_OUT        3610.0                 # starting wavelength guess based on the grating used [Angstrom]
+DWAVE              2.75                   # output wavelength dispersion [and starting dispersion guess; Angstrom/pixel]
+SIGCLIP            4.5                    # cosmic ray clipping threshold [LA_COSMIC]
+OBJLIM             2.0                    # object clipping threshold [LA_COSMIC]
+SIGFRAC            0.5                    # sigma fraction [LA_COSMIC]

@@ -1,0 +1,428 @@
+\documentclass[12pt,preprint]{aastex}
+
+\def\li{\item[$\bullet$]}
+\def\bli{\begin{enumerate}}
+\def\eli{\end{enumerate}}
+
+\begin{document}
+\pagestyle{plain}
+
+\title{RKSPEC: A Data Reduction Package for the B\&C Spectrograph}
+\author{J. Moustakas\altaffilmark{1}}
+%\date{August 2001}
+\affil{Steward Observatory, University of Arizona, Tucson, AZ 85721}
+\altaffiltext{1}{{\tt jmoustakas@as.arizona.edu}}
+
+\section{Recipe}
+
+Run IHEADER_CHECK and make sure all the right keywords are where they
+need to be.  Make file lists with ISPEC_MAKELISTS, /all
+
+
+
+
+\section{Introductory Comments}\label{sec:intro}
+
+{\tt iSPEC} is an improvement over the existing IRAF\footnote{IRAF is
+distributed by the National Optical Astronomy Observatories, which are
+operated by the Association of Universities for Research in Astronomy,
+Inc., under cooperative agreement with the National Science
+Foundation.} spectroscopy packages in several important ways.
+Clarity, flexibility, and speed are at the center of the philosophy
+behind {\tt iSPEC}.  Every manipulation of the data in the reduction
+process is accessible to the user via well-defined input parameters
+and can be critically assessed with practical quality-assurance plots.
+Alternatively, once input parameter files have been created, the data
+can be reduced with batch scripts with no user interaction, including
+automated wavelength calibration, cosmic-ray rejection, and
+flux-calibration.  Two-dimensional error maps and bad pixel masks are
+taken through the equivalent reduction process as the data, providing
+reliable and accurate errors and pixel quality in the final
+one-dimensional spectrum.  On a $1.7$~GHz Pentium~IV processor {\tt
+iSPEC} can reduce $60$ nights of data in $\sim3.75$ hours, or $\sim4$
+minutes per $30-40$ spectra.  The software includes all the required
+two-dimensional data reduction algorithms, including an interactive
+one-dimensional spectrum extraction routine, and a suite of
+one-dimensional spectrum analysis routines.  [{\bf Cite Andy and
+Karl's use of iSPEC?}]  The {\tt iSPEC} software and documentation is
+available for public consumption at {\tt
+http:cerebus.as.arizona.edu/\~{}ioannis/ispec.html}.
+
+This data reduction package was written for the B\&C Spectrograph at
+the 2.3-m telescope at Kitt Peak National Observatory.  However, it
+has been written with generality in mind and could be applied to other
+longslit spectroscopy data after some modifications.  Although some of
+the routines are in the spirit of the IRAF \emph{twodspec} and
+\emph{onedspec} packages, this data reduction software is much more
+automated, and much less of a black box.  Nevertheless, the software
+was written to be fully compatible with IRAF.
+
+\section{Initial Reductions}
+
+Overscan subtraction, trimming, flat-fielding, initializing the
+error maps, and determining the wavelength solution for the data
+frames all fall under the general category of {\em initial
+reductions}.  After initial user input, these procedures are largely
+automated and are not time consuming.
+
+\subsection{Preliminary CCD Processing}\label{sec:preproc}
+
+The noise properties of the CCD must be known to ensure correct
+propegation of errors through the data reduction process, and to
+ensure proper weighting of bad pixels.  To this end, the gain and the
+read noise should be verified using a pair of dome flats and bias
+frames with the routine {\tt GAIN\_RDNOISE}.  The gain $\Gamma$ in
+$e^{-}\ {\rm ADU}^{-1}$ (analog-to-digital units) and the read noise
+$r_{e}$ in $e^{-}$ are given by
+
+\begin{equation}
+\Gamma = \frac{(\bar{F_{1}}+\bar{F_{2}}) -
+(\bar{B_{1}}+\bar{B_{2}})} {\sigma^{2}_{F_{1}-F_{2}} -
+\sigma^{2}_{B_{1}-B_{2}}},
+\end{equation}
+
+\begin{equation}
+r_{e} = \frac{\Gamma \ \sigma_{B_{1}-B_{2}}}{\sqrt{2}}.
+\end{equation}
+
+\noindent In these equations the mean and dispersion of the dome flat
+and the bias frame are given by $\bar{F}$ and $\sigma_{F}$, and
+$\bar{B}$ and $\sigma_{B}$, respectively.  These quantities are
+measured \emph{after} subtraction of the overscan region which is not
+subject to Poisson statistics.  Also note that if $N$ bias frames were
+combined to make a master bias frame, the derived read noise must be
+multiplied by $\sqrt{N}$. 
+%The gain should not differ by more than a few percent (it is a
+%property of the CCD detector), while the read noise will differ from
+%the lab measurement by $\pm1$~e$^{-}$ due to environmental conditions
+%at the telescope at the time of the observations.
+The image headers should be updated with these measured quantities,
+which will be used to initialize the error maps (\S~\ref{sec:proc}).
+
+At this point a few cross-sections of images should be examined to
+determine or verify the good data sections (how to trim the images)
+and the overscan region.  Bad pixels, columns, and cosmic rays are
+kept in the images.  The philosophy adopted was that \emph{ignoring}
+bad data introduces fewer systematics than attempting to \emph{repair}
+bad data.  (These bad pixels can be interpolated over at the end for
+aesthetic purposes, but are not used for measurements.)  Stacks of
+bias frames or dome flats can be combined into master frames with
+iterative sigma clipping using {\tt RKCOMBINE}.
+
+\subsection{CCD processing}\label{sec:proc}
+
+The driver routine for processing the CCD images is {\tt RKCCDPROC}.
+These processing steps include overscan subtraction, trimming, bias
+subtraction, and flat fielding.  The master flat field is created
+using a dome flat and a sky flat; this procedure is described in
+\S~\ref{sec:flat}.  The user has the option of processing an entire
+directory of images, or a specified FITS file list.  The user can
+specify the dimensions of the overscan region and the data section.
+The default overscan region is taken from the header, less two columns
+on either side to avoid edge effects.  The overscan section is
+collapsed to its median along the dispersion direction.  A low-order
+polynomial (default second order) is fitted to this median overscan
+region and subtracted from all the data columns.  The two dimensional
+images are subsequently trimmed.
+
+The noise properties of the CCD and the registered counts in each
+pixel are used to initialize variance maps for each image.  According
+to Poisson statistics, the variance in a pixel $i$ registering $f_{i}$
+ADU is given by
+
+\begin{equation}
+\sigma_{i}^{2} = \left[ \frac{f_{i}}{\Gamma} + \left(\frac{r_{\rm
+e}}{\Gamma}\right)^{2} \right],
+\end{equation}
+
+\noindent where $\Gamma$ and $r_{e}$ were defined in
+\S~\ref{sec:preproc}.  The variance maps characterize the
+signal-to-noise of the observed galaxy spectrum.  In addition, the
+variance of cosmic-ray contaminated pixels or bad columns can be set
+to a very large value, effectively discarding that pixel when doing
+science extractions.
+
+\subsubsection{Flat-fielding and illumination correction}\label{sec:flat}
+
+The pixel-to-pixel quantum efficiency variations of the CCD are
+modeled with a dome flat exposure, while the illumination function
+(gradients in the spatial illumination) is determined from a sky flat.
+The procedure that generates the master flat field is called {\tt
+RKMASTERFLAT}.  The procedure to generate the master flat field is
+straightforward.  A high-order b-spline is fitted to the median
+average of several rows centered around the middle row of the CCD.
+This fit should achieve $1\%$ residuals or better.  Every row of the
+dome flat is divided by this fit.  The sky flat is then divided by
+this preliminary flat field.  The most troublesome aspect of twilight
+flats is that they contain many spectral lines (from the Sun).
+Consequently, the sky flat is smoothed by median-averaging several
+columns.  A low-order polynomial is then fitted at every row along the
+column dimension.  This procedure generates the illumination
+function.  The sky flat is normalized to a mean of one and multiplied
+by the preliminary flat, generating the master flat field.
+
+% Slit function.
+
+\subsection{Wavelength calibration}\label{sec:wave}
+
+The He-Ar calibration lamp exposed closest to the zenith is chosen to
+provide the wavelength solution.  Unlike IRAF, this step is fully
+automated and results in a full two-dimensional map between pixel
+position and wavelength.  The only inputs are initial guesses for the
+spectral range and the dispersion, which are known from the grating
+setting.  
+
+%The traditional way to determine the wavelength solution (e.g. using
+%IRAF) is by manually clicking on arc lines in a spatial cross-section
+%of the calibration lamp to obtain line centroids in pixels, and typing
+%in the corresponding wavelength in Angstroms.  IRAF routines such as
+%IDENTIFY and REIDENTIFY generate two-dimensional wavelength solutions,
+%once an initial solution has been found.  
+
+We begin by searching for He-Ar emission lines at the center row of
+the arc lamp image, and tracing those centroids up and down in the
+spatial dimension.  This traceset is used as an initial guess to trace
+the arc lines starting at the first (zeroth) row, upwards.  The
+traceset is trimmed to exclude lines that are blends, or that deviate
+from their median pixel position by more than $\sim2$ pixels.  Lines
+with low signal-to-noise [S/N] are also removed.  The final traceset
+contains $50-100$ lines.  A low-order function (polynomial, legendre,
+or chebyshev) is fit to each traced line \emph{individually} such that
+ultimately the distortions in the chip are summarized by an
+$[{\mathbf{ncoeff}},{\mathbf{nlines}}]$ matrix, where
+${\mathbf{ncoeff}}$ is the number of coefficients, and
+${\mathbf{nlines}}$ is the number of traced arc lines.  Note that the
+variance of each pixel is incorporated into the fits, so that not only
+do we obtain errors in the line centroids, but bad pixels due to
+cosmic rays or bad columns do not affect the fitting.
+
+The wavelength solution for each image is individually adjusted using
+a list of well-known terrestrial sky lines.  A table of these sky
+lines, their transitions, and wavelengths can be found below.
+
+\section{Science Reductions}
+
+{\em Science reductions} include flux calibration and extracting
+sky-subtracted one-dimensional spectra.  Although these procedures can
+also be automated, in general they demand more user interaction.
+
+\subsection{Flux calibration}
+
+Flux calibration involves generating a sensitivity curve from standard
+star observations that converts counts into physical units (${\rm erg\
+s}^{-1}\ {\rm cm}^{-2}\ {\rm \AA}^{-1}$).  Describe how the object and
+sky aperture windows are defined.
+
+The extraction aperture should be chosen to be large enough so that
+all the light is summed.  Once the standard star spectrum is summed,
+we can generate a sensitivity curve.
+
+\subsection{Determining the sky spectrum}
+
+Once the wavelength solution is known at all spatial positions on the
+CCD we can estimate the sky spectrum.  The following procedure
+generates a ``supersky'' spectrum by sampling the sky at many more
+wavelengths than the object spectra are sampled.  The user should
+choose as many rows that are uncontaminated by the object or standard
+star to generate the supersky spectrum.  For example, imagine the CCD
+has $1200$ pixels in the wavelength direction and the upper and lower
+$40$ rows are chosen as the sky rows.  The supersky spectrum will
+therefore be sampled at $1200\times2\times40=96\,000$ points.  The sky
+is iteratively fit in a least-squares sense with a low-order (by
+default 4) b-spline.  This fit is very robust against cosmic rays or
+bad pixels, and behaves well at the endpoints by virtue of the choice
+of breakpoints.  Instead of interpolating this highly sampled spectrum
+to the poorer resolution of the image rows (introducing unnecessary
+interpolation errors), the parameters of the fit are stored and
+evaluated at all the spatial rows using the two-dimensional wavelength
+solution.
+
+\subsection{Additional utilities}
+
+Conservatively rejecting cosmic rays, cleaning dead CCD columns, and
+replacing masked pixels with interpolated values or with local
+medians.
+
+Measuring the gain and read noise using a pair of bias frames and dome
+flats.  
+
+\acknowledgments
+
+\begin{references}{}
+
+\reference{} Green, R. et al. 1994, Steward Observatory 2.3-m Boller
+and Chivens Spectrograph Manual
+
+\reference{} Massey, P. 1997, A User's Guide to CCD Reductions with
+IRAF
+
+\reference{} Massey, P., Valdes, F., \& Barnes, J. 1992, A User's
+Guide to Reducing Slit Spectra with IRAF
+
+\end{references}
+
+\clearpage
+
+\section*{{\tt RKSPEC} Recipe}
+
+This recipe describes how to reduce an entire run (consisting of any
+number of nights of data) of B\&C longslit spectroscopy observations.
+Make a list of the raw fits files for the run.  For example, in IRAF
+type
+
+\begin{quote}
+cl$>$ imhead *.fits $>$ list \\
+cl$>$ !\,lpr list
+\end{quote}
+
+\noindent I highlight the calibration frames (bias frames, dome flats,
+and comparison arc lamps) and standard star observations different
+colors so I can identify them with a glance.  The batch-processing
+capabilities of {\tt RKSPEC} revolve around text file lists of objects
+to process.  Preliminary steps are to generate a master bias frame and
+a master flat field.  If multiple bias frames and dome flats were
+taken then combine them with {\tt RKCOMBINE} using minmax or sigma
+clipping to reject outliers.  Wavelength calibration requires HeAr arc
+lamp calibration frames.  Sky flat (twilight sky) observations are
+also required to determine the illumination function in the flat
+field.  Finally, examine the FITS headers for keywords such as
+EXPTIME, OBJECT, DATE-OBS etc.  The effective airmass and parallactic
+angle are computed and inputed into the headers during data
+processing.
+
+Examine the bias frames from several of the nights to determine the
+overscan region and the trim section.  Write these numbers down with
+respect to pixel $(0,0)$.  I use the dome flat to determine the
+overscan region, which should be several columns away from the last
+good data pixel (the edge of the trim region).  Select the master bias
+frame, dome flat, and sky flat and input them in the parameter file
+(below) along with the overscan and trim regions, zero-indexed.  Look
+up the gain and the read noise and input them in the parameter file.
+
+The first text file to create for batch processing the data is the
+parameter file.  Create one parameter file for each night that must be
+reduced.  My naming convention is rkbatch\_01nov10.txt.
+
+\begin{center}
+
+{\scriptsize
+\parbox{7in}{
+
+\setlength{\leftmargin}{0.5in}
+
+\# input text file for RKBATCH
+
+bias.fits	  	\# master bias frame                                              \\
+dflat.fits	  	\# master dome flat						  \\
+sflat.fits	  	\# sky flat							  \\
+arclamp.fits	  	\# arc lamp							  \\
+masterflat.fits 	\# input/output flat field name					  \\
+wmap.idlsave		\# input/output wavelength map name				  \\
+sensfunc.fits		\# input/output sensitivity function name			  \\
+badpix.dat	  	\# input bad pixel file						  \\
+1.5		  	\# gain (electron/ADU)						  \\
+5.8		  	\# read noise (electron)					  \\
+10 1194 0 125	  	\# trim region (zero-indexed)					  \\
+1202 1217 0 125		\# overscan region (zero-indexed)				  \\
+50		  	\# b-spline order for the flat fit				  \\
+25			\# b-spline order for the sensitivity function fit		  \\
+3620.0		  	\# output minimum wavelength (and starting wavelength guess)	  \\
+2.75		  	\# output wavelength dispersion (and starting dispersion guess)	  \\
+40		  	\# standard star spectrum extraction aperture (arcsec)		  \\
+20		  	\# standard star spectrum sky aperture (arcsec)			  \\
+4.5		  	\# cosmic ray clipping threshold (sigma, LA\_COSMIC)		  \\
+4.0		  	\# object clipping threshold (sigma, LA\_COSMIC)		  \\
+0.1		  	\# sigma fraction (LA\_COSMIC)                                    \\
+
+}
+}
+
+\end{center}
+
+\noindent Every parameter is explained in the comments above.  
+
+Next either create or obtain a bad pixel mask.  The standard stars are
+good spectra with which to identify bad columns while the dome flats
+are good indicators of dead pixels.  For compatibility with IRAF, the
+bad pixel file should contain row and column numbers with respect to
+pixel $(1,1)$.  
+
+First make the flat field to ensure the order of the dome flat fit is
+good and that the sky flat is flat!  This procedure will also enable
+you to determine if the trim region was selected correctly.
+
+\begin{quote}
+IDL$>$ rkbatch, paramfile, /makeflat
+\end{quote}
+
+\noindent Next compute the wavelength solution to determine the
+starting wavelength.  You should have a good guess of the starting
+wavelength in the parameter file otherwise the cross-correlation
+technique will not work.  Process the arc lamp and determine the
+wavelength map.
+
+\begin{quote}
+IDL$>$ rkbatch, paramfile, proclist='a.3447.fits', /ccdproc, /arcfit
+\end{quote}
+
+\noindent Update the parameter file with the desired output starting
+wavelength and dispersion.  Look at the overscan-subtracted bias frame
+to make sure the overscan correction was done well.  Do all of the
+above shit for all the nights, making a parameter file for each
+night.  It is recommended that the starting wavelength and dispersion,
+trim and overscan regions are all defined the same way.
+
+Now it is time to make a whole shitload of lists.  (1) proclist; (2)
+crsplitfile; (3) crfile; (4) stdfile; (5) tracefile; (6) calibfile.
+Include examples of all the text files!
+
+\begin{enumerate}
+
+\item[(1)]{proclist: list of files to process (flat-field).  This list
+should include all objects, standard stars, sky flats and arc lamps,
+but should exclude the dome flats and the bias frames.  The latter
+frames are specified in the parameter file.}
+
+\item[(2)]{crsplitfile (optional): If cosmic ray-split images were
+obtained these images must be listed in this file.  Each line in the
+text file should contain the images that must be combined.  For
+example, if three images were obtained of one object, a.340[5-7].fits
+then one line of this file would look like
+
+\begin{quote}
+ra.3405.fits ra.3406.fits ra.3407.fits
+\end{quote}
+
+If this file does not exist then this processing step is ignored
+quietly.  Note the ra....}
+
+\item[(3)]{crfile: list of objects in which to look for cosmic rays.
+Basically proclist but without the the arclamps and with cosmic ray
+combined image filenames combined.  For example, above the new file
+name would be ra.3405\_3.fits to replace the individual file names
+given in proclist.  Also take out sky flats.}
+
+\item[(4)]{stdfile:  list of standards to use to derive the
+sensitivity function.}
+
+\item[(5)]{tracefile:  Images with which to model the tilt in the
+spectral light, normally standard stars.}  
+
+\item[(6)]{calibfile:  Images to wavelength- and flux-calibrate.
+Basically the crfile but with a c prepended.}
+
+\end{enumerate}
+
+Make the rest of the parameter files.  And make all these files for
+the remaining nights.  Should take about an hour if meticulous.
+
+Preliminary steps are to go through and make the flat fields for all
+the nights and determine the wavelength solution so that the parameter
+files can be updated accordingly with the starting wavelength, which
+should be larger than the largest starting wavelength of the arc lamp
+solutions. 
+
+
+
+
+\end{document}

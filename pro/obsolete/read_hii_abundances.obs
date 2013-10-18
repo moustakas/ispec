@@ -1,0 +1,215 @@
+function init_Z_struct, ndata
+; initialize the electron temperature abundance structure
+    
+    data = {$
+      oii_h_alpha:     -999.0, $
+      oii_h_beta:      -999.0, $
+      oiii_h_alpha:    -999.0, $
+      oiii_h_beta:     -999.0, $
+      nii_h_alpha:     -999.0, $
+      nii_h_beta:      -999.0, $
+      sii_h_alpha:     -999.0, $
+      sii_h_beta:      -999.0, $
+      nii_oii:         -999.0, $ ; additional line ratios
+      nii_sii:         -999.0, $
+      oii_sii:         -999.0, $
+      oiii_nii:        -999.0, $ 
+      oiii_oii:        -999.0, $ 
+      R23:             -999.0, $
+      Z_Te:            -999.0, $ ; electron-temperature abundance
+      reference:   ''}
+    data = replicate(data,ndata)
+
+return, data
+end
+
+function init_Zstrong_struct, ndata
+; initialize the strong-line abundance structure; these line ratios
+; will be given to IABUNDANCE to compute empirical abundances based on
+; L. Kewley's models; all the line fluxes are assumed to be normalized
+; to H-beta (= 1.0)
+    
+    linename = ['OII_3727','H_BETA','OIII_4959','OIII_5007',$
+      'H_ALPHA','NII_6584','SII_6716','SII_6731']
+    
+    data = {$
+      linename:        linename, $
+      oii_3727:        fltarr(2),$
+      h_beta:          fltarr(2),$
+      oiii_4959:       fltarr(2),$
+      oiii_5007:       fltarr(2),$
+      h_alpha:         fltarr(2),$
+      nii_6584:        fltarr(2),$
+      sii_6716:        fltarr(2),$
+      sii_6731:        fltarr(2)}
+    data = replicate(data,ndata)
+
+return, data
+end
+
+function parse_datafile, datafile, reference, lfluxes=lfluxes
+
+; correction factors    
+    
+    oratio = 2.984
+    ocor = 1+(1.0/oratio)
+
+; do the parsing    
+    
+    nfile = n_elements(datafile)
+    for k = 0L, nfile-1L do begin
+
+; read the data file       
+       
+       readcol, datafile[k], object, oii, oiii, hahb, nii, sii6716, $
+         sii6731, oh, format='A,F,F,F,F,F,F,F', comment='#', /silent
+       
+; initialize the line electron temperature abundance structure and the
+; strong-line abundance structure        
+
+       data1 = init_Z_struct(n_elements(object))
+       abund1 = init_Zstrong_struct(n_elements(object))
+
+; [O II] 3727
+       
+       g = where((oii gt -90.0) and (hahb gt -90.0))
+       data1[g].oii_h_alpha  = alog10(oii[g]/hahb[g])
+
+       g = where(oii gt -90.0)
+       data1[g].oii_h_beta   = alog10(oii[g])
+       abund1[g].oii_3727[0] = oii[g]
+
+; H-beta
+
+       abund1[g].h_beta[0] = 1.0
+       
+; [O III] 4959, [O III] 5007
+       
+       g = where((oiii gt -90.0) and (hahb gt -90.0))
+       data1[g].oiii_h_alpha = alog10(oiii[g]/hahb[g])
+
+       g = where(oiii gt -90.0)
+       data1[g].oiii_h_beta  = alog10(oiii[g])
+       abund1[g].oiii_4959[0] = oiii[g]/oratio
+       abund1[g].oiii_5007[0] = oiii[g]
+
+; [N II] 6584       
+       
+       g = where((nii gt -90.0) and (hahb gt -90.0))
+       data1[g].nii_h_alpha  = alog10(nii[g]/hahb[g])
+
+       g = where(nii gt -90.0)
+       data1[g].nii_h_beta   = alog10(nii[g])
+       abund1[g].nii_6584[0] = nii[g]
+
+; H-alpha       
+       
+       g = where(hahb gt -90.0)
+       abund1[g].h_alpha[0] = hahb[g]
+
+; [S II] 6716
+
+       g = where(sii6716 gt -90.0)
+       abund1[g].sii_6716[0] = sii6716[g]
+       
+; [S II] 6731
+
+       g = where(sii6731 gt -90.0)
+       abund1[g].sii_6731[0] = sii6731[g]
+
+; [S II] 6716+6731
+       
+       g = where((sii6716 gt -90.0) and (sii6731 gt -90.0) and (hahb gt -90.0))
+       data1[g].sii_h_alpha  = alog10((sii6716[g]+sii6731[g])/hahb[g])
+
+       g = where((sii6716 gt -90.0) and (sii6731 gt -90.0))
+       data1[g].sii_h_beta   = alog10(sii6716[g]+sii6731[g])
+
+; additional line ratios
+       
+       g = where((nii gt -90.0) and (oii gt -90.0))
+       data1[g].nii_oii = alog10(nii[g]/oii[g])
+
+       g = where((nii gt -90.0) and (sii6716 gt -90.0) and (sii6731 gt -90.0))
+       data1[g].nii_sii = alog10(nii[g]/(sii6716[g]+sii6731[g]))
+
+       g = where((oii gt -90.0) and (sii6716 gt -90.0) and (sii6731 gt -90.0))
+       data1[g].oii_sii = alog10(oii[g]/(sii6716[g]+sii6731[g]))
+
+       g = where((nii gt -90.0) and (oiii gt -90.0))
+       data1[g].oiii_nii = alog10(oiii[g]/nii[g])
+
+       g = where((oii gt -90.0) and (oiii gt -90.0))
+       data1[g].oiii_oii = alog10(oiii[g]/oii[g])
+
+       g = where((oii gt -90.0) and (oiii gt -90.0))
+       data1[g].R23 = alog10((oii[g]+oiii[g]*ocor))
+
+; electron temperature abundance and reference
+       
+       g = where(oh gt -90.0)
+       data1[g].Z_Te = oh[g]
+
+       data1.reference = reference[k]
+       
+       if k eq 0L then data  = data1  else data  = struct_append(data,data1)
+       if k eq 0L then lfluxes = abund1 else lfluxes = struct_append(lfluxes,abund1)
+    
+    endfor
+
+    data = reform(data)
+    lfluxes = reform(lfluxes)
+    
+return, data
+end
+
+function read_hii_abundances
+; jm03aug31uofa
+; read electron-temperature based abundances for HII regions
+
+    bigpath = atlas_path(/literature)+'ABUNDANCES/'
+    pushd, bigpath
+    
+; correction factors    
+    
+    nratio = 3.054
+    oratio = 2.984
+    
+    ncor = alog10(1.0+1.0/nratio)
+    ocor = alog10(1.0+1.0/oratio)
+
+; read and parse all the data files    
+    
+    datafile = [$
+      'garnett97.dat',$
+      'vanzee98.dat', $
+      'M101.dat',     $
+      'izotov99.dat', $
+      'castellanos02.dat']
+      
+    reference = [$
+      'Garnett et al. 1997, ApJ, 489, 63', $
+      'van Zee et al. 1998, AJ, 116, 2805',$
+      'Kennicutt & Garnett 2003, ApJ, 591, 801',$
+      'Izotov & Thuan 1999, ApJ, 511, 639',     $
+      'Castellanos, Diaz, & Terlevich 2002, MNRAS, 329, 315']
+
+    abundances = parse_datafile(datafile,reference,lfluxes=lfluxes)
+    
+; append these results
+    
+    abundances = struct_append(abundances,z98)
+    lfluxes = struct_append(lfluxes,z98fluxes)
+
+; compute strong-line abundances from Kewley et al (2001)
+
+    strong = iabundance(lfluxes)
+
+; append the model results and return    
+
+    out = struct_addtags(abundances,strong)
+
+    popd
+    
+return, out
+end    

@@ -1,0 +1,106 @@
+\documentclass[12pt,preprint]{aastex}
+
+\input{/home/ioannis/bin/latex/myprefs}
+\newcommand{\rk}{{\tt RKSPEC}}
+\newcommand{\idl}{{\tt IDL}}
+
+\begin{document}
+\pagestyle{plain}
+
+\title{Extracting Spectra with \rk}
+\author{J. Moustakas\altaffilmark{1}}
+%\date{August 2001}
+\affil{Steward Observatory, University of Arizona, Tucson, AZ 85721}
+\affil{2003 January 14}
+\altaffiltext{1}{{\tt jmoustakas@as.arizona.edu}}
+
+We assume you have a two-dimensional spectrum called
+\emph{galaxy.fits} that has been fully reduced with \rk.  To extract a
+spectrum simply call the routine RKSPEC, which is a wrapper for
+RKEXTRACT, the spectral extraction workhorse.
+
+\begin{verbatim}
+       IDL> rkspec, 'galaxy.fits', info
+\end{verbatim}
+
+\noindent Two windows will appear.  The window on the right shows the
+spatial profile of the object, the aperture window, the sky windows,
+and information from the header like the airmass.  The window on the
+left shows the extracted one-dimensional spectrum.  The output
+\emph{info} is a data structure that shows all the extraction
+parameters, one-dimensional spectra, the fitted sky image (SKYFIT),
+and the sky-subtracted two-dimensional image (IMNOSKY), among other
+things:
+
+\begin{verbatim}
+       IDL> help, info, /str
+       ** Structure <81d0394>, 20 tags, length=1301408, data length=1301406, refs=1:
+          SPEC            FLOAT     Array[1194]
+          WAVE            FLOAT     Array[1194]
+          SIGSPEC         FLOAT     Array[1194]
+          SKY             FLOAT     Array[1194]
+          MASK            BYTE      Array[1194]
+          HEADER          STRING    Array[92]
+          REFROW          LONG                63
+          REFCOL          LONG               596
+          REFWAVE         FLOAT           5270.38
+          APERTURE        FLOAT           20.0000
+          CENTER          DOUBLE    Array[1194]
+          LOWER           DOUBLE    Array[1194]
+          UPPER           DOUBLE    Array[1194]
+          SKYAP           LONG      Array[2]
+          SKYLOW          LONG      Array[1194]
+          SKYUP           LONG      Array[1194]
+          FLANKING        FLOAT     Array[2]
+          SKYMETHOD       LONG                 3
+          SKYFIT          FLOAT     Array[1194, 130]
+          IMNOSKY         FLOAT     Array[1194, 130]
+\end{verbatim}
+
+\noindent The one-dimensional spectrum can be written to a FITS file
+with the WFITS keyword:
+
+\begin{verbatim}
+       IDL> rkspec, 'galaxy.fits', /wfits
+\end{verbatim}
+
+\noindent The output file name will be \emph{galaxy\_020.ms.fits}.  The
+``020'' specifies the extraction aperture in arcseconds and the ``ms''
+indicates that the file is a multi-extension FITS file.  To read or
+plot the one-dimensional spectrum try
+
+\begin{verbatim}
+       IDL> spec = rd1dspec('galaxy_020.ms.fits')
+       IDL> help, spec, /str
+       ** Strucature <81dbc54>, 10 tags, length=25024, data length=25024, refs=1:
+       	  SPECNAME        STRING    'galaxy_020.ms.fits'
+       	  DATAPATH        STRING    '/home/ioannis/'
+       	  OBJECT          STRING    'N1377 nuc'
+       	  HEADER          STRING    Array[92]
+       	  NPIX            LONG              1194
+       	  SPEC            FLOAT     Array[1194]
+       	  SIGSPEC         FLOAT     Array[1194]
+       	  SKY             FLOAT     Array[1194]
+       	  MASK            FLOAT     Array[1194]
+       	  WAVE            FLOAT     Array[1194]
+       IDL> plot1dspec, 'galaxy_020.ms.fits'
+\end{verbatim}
+
+\noindent The extracted spectrum has the spectrum, the error spectrum,
+the sky spectrum, and the bad pixel spectrum in each of four FITS
+extensions.  For example, to plot the signal-to-noise spectrum try
+
+\begin{verbatim}
+       IDL> plot, spec.wave, spec.spec/spec.sigspec, ps=10, xsty=3, ysty=3
+\end{verbatim}
+
+\noindent All the extraction parameters are documented in RKEXTRACT.
+Here is an example.  Extract and write out a $5\arcsec$ spectrum with
+second-order tracing and $60\arcsec$ sky apertures.
+
+\begin{verbatim}
+       IDL> rkspec, 'galaxy.fits', info, aperture=5, skyaperture=60, $
+       IDL>   /tracespec, traceorder=2, /wfits
+\end{verbatim}
+
+\end{document}

@@ -1,0 +1,44 @@
+## Stars not yet incorporated: 1740346, 1743045, 1805292, 1812095,
+## 2M0036+18, 2M0559-14, C26202, HZ43B, KF01T5, KF06T1, KF06T2,
+## KF08T3, SF1615001A, SNAP-1, SNAP-2, VB8, WD1057-719, WD1657-343
+##
+## Simbad notes: P041C=GSPCP41-C, P177D=GSPCP177-D, P330E=GSPCP330E
+##
+# 1 FILE
+# 2 STAR
+# 3 RA [J2000]
+# 4 DEC [J2000]
+# 5 B
+# 6 V
+# 7 STARPATH
+# 8 STARCOLOR
+calspec_agk_81d266_stis_001.dat	   AGK+81266   09:21:19.18 +81:43:27.6 11.60 11.94   calspec   darkgreen
+calspec_bd_17d4708_stis_001.dat	   BD+174708   22:11:31.37 +18:05:34.2  9.91  9.47   calspec   tomato
+calspec_bd_25d4655_002.dat	   BD+254655   21:59:41.97 +26:25:57.4  9.38  9.69   calspec   tan
+calspec_bd_28d4211_stis_001.dat	   BD+284211   21:51:11.02 +28:51:50.4 10.17 10.51   calspec   honeydew
+calspec_bd_33d2642_fos_003.dat	   BD+332642   15:51:59.89 +32:56:54.3 10.66 10.83   calspec   palegreen
+calspec_bd_75d325_stis_001.dat	   BD+75325    08:10:49.49 +74:57:57.9  9.22  9.50   calspec   aquamarine
+calspec_feige110_stis_001.dat	   FEIGE110    23:19:58.40 -05:09:56.2 11.53 11.83   calspec   yellow
+calspec_feige34_stis_001.dat	   FEIGE34     10:39:36.74 +43:06:09.3 10.84 11.18   calspec   green
+calspec_feige66_002.dat		   FEIGE66     12:37:23.52 +25:03:59.9 10.22 10.51   calspec   violet
+calspec_feige67_002.dat		   FEIGE67     12:41:51.79 +17:31:19.8 11.48 11.82   calspec   turquoise
+calspec_g191b2b_mod_004.dat	   G191B2B     05:05:30.61 +52:49:51.9 11.44 11.77   calspec   blue
+calspec_g93_48_004.dat		   G93-48      21:52:25.38 +02:23:19.6 12.73 12.74   calspec   darkgoldenrod
+calspec_gd108_005.dat		   GD108       10:00:47.00 -07:33:30.0 13.34 13.56   calspec   salmon
+calspec_gd153_mod_004.dat	   GD153       12:57:02.00 +22:02:00.0 13.06 13.35   calspec   darksalmon
+calspec_gd50_004.dat		   GD50        03:48:50.10 -00:58:30.0 13.78 14.06   calspec   greenyellow
+calspec_gd71_mod_005.dat	   GD71        05:52:27.50 +15:53:17.0 12.78 13.03   calspec   orangered
+calspec_grw_70d5824_stis_001.dat   GRW+705824  13:38:50.47 +70:17:07.6 12.68 12.77   calspec   chartreuse
+calspec_hd93521_stis_001.dat	   HD93521     10:48:23.51 +37:34:13.1  6.72  6.99   calspec   palegoldenrod
+calspec_hz21_stis_001.dat	   HZ21        12:13:56.27 +32:56:31.4 14.36 14.69   calspec   saddlebrown
+calspec_hz2_005.dat		   HZ2         04:12:43.49 +11:51:50.6 13.79 13.88   calspec   hotpink
+calspec_hz43_mod_004.dat	   HZ43        13:16:21.85 +29:05:55.4 12.60 12.91   calspec   magenta
+calspec_hz44_stis_001.dat	   HZ44        13:23:35.26 +36:07:59.5 11.38 11.67   calspec   red
+calspec_hz4_stis_001.dat	   HZ4         03:55:21.77 +09:47:18.4 14.60 14.51   calspec   rosybrown
+calspec_lb227_004.dat		   LB227       04:09:28.50 +17:07:55.2 15.38 15.32   calspec   orchid
+calspec_lds749b_005.dat		   LDS749B     21:32:16.10 +00:15:15.0 14.64 14.68   calspec   lightsalmon
+calspec_ltt9491_002.dat		   LTT9491     23:19:35.00 -17:05:30.0 14.13 14.10   calspec   linen
+calspec_ngc7293_005.dat		   NGC7293     22:29:38.55 -20:50:13.6 13.16 13.53   calspec   papaya
+calspec_p041c_stisnic_001.dat      P041C       14:51:58.19 +71:43:17.3 12.62 12.01   calspec   darkgreen
+calspec_p177d_stisnic_001.dat	   P177D       15:59:13.59 +47:36:41.8 13.96 13.36   calspec   brown
+calspec_p330e_stisnic_001.dat	   P330E       16:31:33.85 +30:08:47.1 12.97 12.92   calspec   violet

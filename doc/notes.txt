@@ -1,0 +1,80 @@
+The data reduction processing steps are:
+
+; measure the gain and the read noise
+    
+;   jpath = '/home/ioannis/kennicutt/'    
+;   gain_rdnoise, jpath+'98mar/a.0102.fits', jpath+'98apr/a.0203.fits', jpath+'98mar/a.0101.fits', $
+;     jpath+'98apr/a.0204.fits', gain=gain, rdnoise=rdnoise
+;   niceprint, 'Gain & Read noise = ', gain, rdnoise*sqrt(10.0)
+   
+[1] Fit and subtract the overscan region from all the frames.  The 
+fit to the arc lamp overscan region is not so important since we
+don't care about the flux of the lamp lines.  The region should be
+fit with anywhere from a constant to a second or third order polynomial.
+
+[2] Trim all the frames.
+
+*****
+The overscan and trim regions can be specified by the user by generating
+text files called ... and ..., otherwise the default overscan and trim
+regions specified in the headers will be used.
+*****
+
+[3] Construct a master bias frame and subtract the bias frame from all 
+the data.
+
+[4] Construct a master flat field (combining all the individual dome flats),
+fit a response curve in the spectral dimension to the master flat.  Divide
+the data by this response curve.
+
+[5] Illumination correction here.
+
+[6] Wavelength calibrate the data by identifying either arc lamp lines or 
+night sky emission lines by using a flux-weighted centering algorithm.  Make
+residual plots, etc.
+
+*****
+Don't forget to update the variance maps for each object.
+*****
+
+
+
+
+
+Routines are developed to be run independently and interactively or as
+part of a large batch file (that is, not interactively).  The
+interactive aspect will be developed later.  
+
+** The headers need to be updated properly at every step!
+
+General notes:
+
+* Arc calibration lamps, bias frames and flat fields should be applied
+  on a night-by-night basis, while standard star exposures can be
+  combined from the whole run.  Standards from the whole run should
+  *not* be combined, however, if the grating changes.
+
+* Dark frames were taken during the 1998 April run, and should be
+  checked to see if dark current is in any way significant.
+
+----------------------------------------------------------------------
+
+* Generate a bad-pixel mask file.  A flat-field is usually a good
+  image to use for identifying bad columns.  Ideally, two flat-fields
+  of different exposure times divided by one another would be used to
+  flag bad pixels.  Any cosmetic features absent in this divided image
+  will come out of the data during flat-fielding.
+
+* Define the overscan region by creating a overscan_region text file.
+  The default is to use the BIASSEC region specified in the header.
+
+* Define the trim region by creating a trim_region text file.  The
+  default is to use the TRIMSEC region specified in the header.
+
+
+
+
+- choose a datapath: RKDPATH()
+- read the data: RDSPECTRA()
+- subtract the overscan region and trim the image: RKOVERSCAN
+

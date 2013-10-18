@@ -1,0 +1,12 @@
+# 1 FILE
+# 2 STAR
+# 3 RA [J2000]
+# 4 DEC [J2000]
+# 5 B
+# 6 V
+# 7 STARPATH
+# 8 STARCOLOR
+oke1983_hd19445.dat   HD19445   03:08:25.59 +26:19:51.4  8.51 8.05   oke1983   goldenrod
+oke1983_hd84937.dat   HD84937   09:48:56.10 +13:44:39.3  8.69 8.28   oke1983   forestgreen
+oke1983_bd26d2606.dat BD+262606 14:49:02.36 +25:42:09.2 10.16 9.72   oke1983   papaya
+oke1983_bd17d4708.dat BD+174708 22:11:31.37 +18:05:34.2  9.91 9.47   oke1983   lavendar

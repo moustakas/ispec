@@ -1,0 +1,23 @@
+J. Moustakas, 2001 August 20, U of A
+
+The SPECTRA directory contains the original spectra of 25
+spectrophotometric standard stars from Massey, Strobel, Barnes, &
+Anderson 1998, ApJ, 328, 315.  The data were obtained electronically
+from the Astronomical Data Center from GSFC at
+http://adc.gsfc.nasa.gov/adc-cgi/cat.pl?/catalogs/3/3116/.  Each data
+file has an extensive header, wavelength in Angstroms and the
+corresponding magnitude based on the Hayes & Latham (1975)
+calibration:
+
+	m = -2.5 * log_10 ( f_nu ) - 48.59
+
+where f_nu is in [erg/s/cm^2/Hz].  The magnitude of Vega at 5556
+Angstrom is defined to be 0.04.  The spectra have been parsed using
+WRITE_BINNED_STANDARDS and 10 Angstrom bandpasses.
+
+The file table1.dat is directly from the paper.  
+
+BV photometry has been taken from the original Massey paper.
+
+PG0934554 has been excluded because there are no data between
+5281-5541 Angstroms.  

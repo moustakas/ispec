@@ -1,0 +1,62 @@
+;+
+; NAME:
+;       KGSKYSUB
+;
+; PURPOSE:
+;       Do a simple sky subtraction on a two-dimensional spectrum. 
+;
+; CALLING SEQUENCE:
+;
+;
+; INPUTS:
+;
+;
+; OPTIONAL INPUTS:
+;
+;
+; KEYWORD PARAMETERS:
+;
+;
+; OUTPUTS:
+;
+;
+; OPTIONAL OUTPUTS:
+;
+;
+; PROCEDURES USED:
+;       CWD(), ISPEC
+;
+; EXAMPLE:
+;
+;
+; MODIFICATION HISTORY:
+;       K. Gordon, 2002
+;       J. Moustakas, 2003 April 16, documented, ISPEC v1.0.0
+;-
+
+pro kgskysub, file, skytop=skytop, datapath=datapath
+
+    if n_elements(datapath) eq 0L then datapath = cwd()
+
+    aperture = 20.0
+    skyaperture = 20.0
+
+    if (keyword_set(skytop)) then begin
+       skylow = 185
+       skyup = 5
+    endif else begin
+       skylow = 5
+       skyup = 185
+    endelse
+
+    ispec, file, aperture=aperture, skyaperture=skyaperture, $
+      /noplot, skymethod=1, specinfo, /noskyshift, datapath=datapath, $
+      skylow=skylow, skyup=skyup
+    
+    spec2d = rd2dspec('Red/'+file)
+    wrt2dspec, 's'+file, specinfo.imnosky, spec2d.sigmamap, $
+      spec2d.mask, *spec2d.header, datapath=datapath 
+
+return
+end
+

@@ -1,0 +1,32 @@
+J. Moustakas
+University of Arizona
+
+jm05jun01uofa
+-------------
+
+L745 was excluded from the database because no blue spectra exist.
+Also, Bessell (1999) states: "The published spectrophotometric data
+for the white dwarfs L745-46A and VMa2 have lower precision that for
+the Hamuy et al. (1994) stars..."
+
+BV photometry is taken from Table 2 of Bessell (1999).
+
+jm05apr14uofa
+-------------
+
+Spectra renamed.  Information table converted to sextractor format and
+updated.
+
+jm03feb
+-------
+
+Hamuy et al. 1992, 1994
+
+Spectra obtained from ftp://ftp.eso.org/pub/stecf/standards/ctiostan.
+Only the faint spectrophotometric (tertiary) standards are included.
+
+Spectra are in units of Angstroms and AB magnitude, in bandpasses of
+width 50 Angstroms.
+
+m = -2.5 log f_nu - 48.59
+

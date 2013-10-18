@@ -1,0 +1,149 @@
+\documentclass[preprint,11pt]{aastex}
+
+\begin{document}
+
+%\newcommand{\begv}{\begin{verbatim}}
+%\newcommand{\endv}{\end{verbatim}}
+
+\input{/home/ioannis/bin/latex/myprefs}
+
+\title{RKSPEC Recipe}
+\author{J. Moustakas \\ 2002 September}
+
+\section{Preliminaries}
+
+[NOTE:  The bad pixel file input needs to be in the coordinates of the
+untrimmed image, and one-indexed (not zero-indexed).]
+
+
+
+The purpose of this document is to describe how to reduce one whole
+night of longslit spectroscopy in semi-batch mode using RKSPEC.  Once
+the input parameter files have been set up and the appropriate
+calibration images have been chosen, the data can be reduced very
+quickly.  The end of the manual describes how to reduce data from an
+entire observing run.  Throughout the manual I will attempt to
+indicate parts of the code that have not yet been generalized.
+
+At minimum the data headers must contain the following keywords:
+OBJECT, IMAGETYP, DATE\_OBS, EXPTIME, RA, DEC, OBSERVAT,
+GAIN, and RDNOISE.  Note the spelling of the keywords.  The DATE\_OBS
+header keyword must be in FITS standard format (YYYY-MM-DD).
+
+The driver routine for batch-reducing one night of data is called
+{\tt RKBATCH}, which requires an input parameter file, an example of
+which follows.  This parameter file will be called rkbatch.txt.
+
+\begin{center}
+\begin{verbatim}
+# input text file for RKBATCH
+
+bias.fits                 # master bias frame
+domeflat.fits             # master dome flat
+skyflat.fits              # sky flat
+rarclamp.fits             # arc lamp
+masterflat.fits           # input/output flat field name
+wmap.idlsave              # input/output wavelength map name
+trace.idlsave             # input/output trace structure
+sens.fits                 # input/output sensitivity function name
+badpix.dat                # input bad pixel file
+1.5                       # gain (electron/ADU)
+5.8                       # read noise (electron)
+3 1194 0 125              # trim region (zero-indexed)
+1202 1217 0 125           # overscan region (zero-indexed)
+50                        # b-spline order to the flat fit
+20                        # b-spline order to the sensitivity function fit
+3605.0                    # output minimum wavelength (and starting wavelength guess)
+2.75                      # output wavelength dispersion (and starting dispersion guess)
+30                        # standard star spectrum extraction aperture (arcsec)
+60                        # standard star spectrum sky aperture (arcsec)
+4.5                       # cosmic ray clipping threshold (sigma, LA_COSMIC)
+2.0                       # object clipping threshold (sigma, LA_COSMIC)
+0.5                       # sigma fraction (LA_COSMIC)
+\end{verbatim}
+\end{center}
+
+\noindent Before beginning the reductions, the user must (1) select
+which images (file names) to use as the bias frame, the dome flat, the
+arc lamp, and (optionally) the sky flat; (2) choose names for the
+master flat field, wavelength map, and spatial distortion map (called
+the {\em trace structure} in the above example; (3) optionally create
+an input bad pixel mask with known CCD bad pixels and dead columns;
+(4) input the CCD gain and read noise; (5) determine the trim region
+(or the usable data section) and the overscan region.  The approximate
+dispersion (\AA~pixel$^{-1}$) and starting wavelength should be
+specified in the parameter file as initial guesses to the wavelength
+solution.  The last three parameters in the parameter file refer to
+cosmic-ray rejection with LA\_COSMIC (van Dokkum, P. 2001, PASP, 113,
+1420).  The defaults are conservative and relatively robust, but I
+recommend that the individual pixel masks are examined to ensure that
+no important spectral features have been affected by the cosmic-ray
+rejection.
+
+In addition to the parameter file the user will need to create simple
+text files containing the lists of files to process, cosmic-ray clean,
+flux-calibrate, etc.  
+
+\section{Running RKBATCH}
+
+The routine RKBATCH carries out eight distinct tasks, as specified by
+the following IDL keywords: MAKEFLAT, CCDPROC, DISTORTION, ARCFIT,
+CRSPLITS, CRCLEAN, MAKESENS, and CALIBRATE.  These keywords are
+described in greater detail in the sub-sections that follow.
+
+\subsection{MAKEFLAT}
+
+The keyword MAKEFLAT generates a master flat-field from the dome flat.
+Optionally, a sky flat can be used to determine the illumination
+correction along the spatial dimension of the CCD.  The flat field is
+created by the routine RKMASTERFLAT, which is called by RKCCDPROC.
+The name of the output flat field is specified in the input parameter
+file.
+
+\begin{verbatim}
+IDL> 
+
+\end{verbatim}
+
+\subsection{CCDPROC}
+
+This keyword 
+
+, the
+routine that is responsible for trimming, overscan-subtraction,
+updating FITS headers, initializing the variance maps and bad pixel
+masks, bias-subtraction, and flat-fielding.  
+
+
+
+\subsection{DISTORTION}
+
+
+
+\subsection{ARCFIT}
+
+\subsection{CRSPLITS}
+
+\subsection{CRCLEAN}
+
+\subsection{MAKESENS}
+
+\subsection{CALIBRATE}
+
+\section{Error propagation}
+
+The noise properties of the CCD and the registered counts in each
+pixel are used to initialize variance maps for each image.  According
+to Poisson statistics, the variance in a pixel $i$ registering $f_{i}$
+ADU is given by
+
+\begin{equation}
+\sigma_{i}^{2} = \left[ \frac{f_{i}}{\Gamma} + \left(\frac{r_{\rm
+e}}{\Gamma}\right)^{2} \right],
+\end{equation}
+
+\noindent where $\Gamma$ is the gain in $e^{-}\ {\rm ADU}^{-1}$
+(analog-to-digital units) and the read noise is $r_{e}$ in $e^{-}$.  
+
+
+\end{document}

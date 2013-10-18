@@ -1,0 +1,215 @@
+# HeAr Line List
+#
+# CRC Handbook of Chemistry & Physics Third Electronic Edition (81st) 
+# http://www.hbcpnetbase.com, Section 10, "Line Spectra of the Elements" 
+#
+# Lines not found in the CRC were found on NIST at
+# http://physics.nist.gov/cgi-bin/AtData/lines_form
+#
+# (1) Wavelength [Angstroms in air]; (2) Intensity; (3) quality [GOOD/BLEND/BAD]
+# (4) Element and Ionization State
+#
+# J. Moustakas, 26 July 2001, U of A
+# jm02apr15uofa - updated and modified 
+# jm02oct6uofa  - extended to 10000 Angstrom 
+# jm04feb4uofa  - better documentation
+#
+  3033.508      50      GOOD	ArII
+  3093.402      50      GOOD	ArII
+  3187.7444	20	GOOD	HeI
+  3243.689	20	GOOD	ArII
+  3293.640	25	GOOD	ArII
+  3307.228	20	GOOD	ArII
+  3350.924	25	GOOD	ArII
+  3376.436	25	GOOD	ArII
+  3388.531      25	GOOD	ArII
+  3476.747      70	GOOD	ArII
+  3478.232      20	GOOD	ArII
+  3491.536     100	BLEND	ArII # blended with 3491.244
+  3509.778      70	GOOD	ArII
+  3514.388      70	GOOD	ArII
+  3545.596      70	BLEND	ArII # blended with 3545.845
+  3559.508     100	GOOD	ArII
+  3561.030     100	GOOD	ArII
+  3576.616	70	GOOD	ArII
+  3581.608	25	GOOD	ArII
+  3582.355	50	GOOD	ArII
+  3588.441	70	GOOD	ArII
+  3622.138	25	GOOD	ArII
+  3639.833	20	GOOD	ArII
+  3718.207	35	GOOD	ArII
+  3729.309	70	GOOD	ArII
+  3737.889	50	GOOD	ArII
+  3765.270     150      GOOD	ArII
+  3766.119      50      GOOD	ArII
+  3780.840	25	GOOD	ArII
+  3809.456      50	GOOD	ArII
+  3819.6020	10	BLEND	HeI  # blended with 3819.76
+  3850.581	70	GOOD	ArII
+  3868.528	35	GOOD	ArII
+  3888.6456    500	GOOD	HeI
+  3928.623      50      GOOD	ArII
+  3946.097      70      GOOD	ArII
+  3964.7285	20	GOOD	HeI
+  4013.857      50      GOOD    ArII
+  4026.1844	50	BLEND	HeI  # blended with 4026.36
+  4033.809      50      GOOD    ArII
+  4042.894     150      GOOD    ArII
+  4044.418      50      GOOD    ArI
+  4052.921     100      GOOD    ArII
+  4072.005     200      BLEND   ArII # blended with 4072.385
+  4103.912	150	GOOD	ArII
+  4120.8237	12	BLEND	HeI  # blended with 4120.99
+  4131.724	300	GOOD	ArII
+  4158.590	400	GOOD	ArI
+  4164.180      50      GOOD    ArI
+  4181.884	50	GOOD	ArI
+  4190.713      100     GOOD    ArI
+  4191.029      50      GOOD    ArI
+  4198.317      200     GOOD    ArI
+  4200.674      400     GOOD    ArI
+  4228.158      100     GOOD    ArII
+  4237.220	100	GOOD	ArII
+  4259.362	200	GOOD	ArI
+  4266.286	100	GOOD	ArI
+  4266.527	70	GOOD	ArII
+  4272.169	150	GOOD	ArI
+  4277.528	550	GOOD	ArII
+  4300.101	100	GOOD	ArI
+  4309.239	70	GOOD	ArII
+  4331.200	200	GOOD	ArII
+  4332.030	50	GOOD	ArII
+  4333.561      100     GOOD	ArI
+  4335.338      50      GOOD	ArI
+  4348.064      800     GOOD	ArII
+  4352.205      50      GOOD	ArII
+  4367.832      50      GOOD	ArII
+  4370.753      200     GOOD	ArII
+  4371.329      70      GOOD	ArII
+  4375.954      50      GOOD	ArII
+  4379.667     150      GOOD	ArII
+  4385.057      50      GOOD	ArII
+  4387.9291	10	GOOD	HeI
+  4400.986     200	BLEND	ArII # blended with 4400.097
+  4426.001     400      GOOD	ArII
+  4430.189     150      BLEND	ArII # blended with 4430.996
+  4433.838      50      GOOD	ArII
+  4448.879	35	GOOD	ArII
+  4471.4743	200	BLEND	HeI  # blended with 4471.68
+  4474.759	100	GOOD	ArII
+  4481.811	200	GOOD	ArII
+  4510.733	100	GOOD	ArI
+  4545.052	400	GOOD	ArII
+  4579.350	400	GOOD	ArII
+  4589.898	400	GOOD	ArII
+  4609.567	550	GOOD	ArII
+  4657.901	400	GOOD	ArII
+  4713.1392	30	BLEND	HeI  # blended with 4713.38
+  4726.868	550	GOOD	ArII
+  4735.906	300	GOOD	ArII
+  4764.865	800	GOOD	ArII
+  4806.020	550	GOOD	ArII
+  4847.810	150	GOOD	ArII
+  4865.910	50	GOOD	ArII
+  4879.864	800	GOOD	ArII
+  4889.042	70	GOOD	ArII
+  4921.9310	20	GOOD	HeI
+  4965.080	200	GOOD	ArII
+  5009.334	50	GOOD	ArII
+  5015.6776	100	GOOD	HeI
+  5017.163	70	GOOD	ArII
+  5047.7384	10	GOOD	HeI
+  5062.037	70	GOOD	ArII
+  5141.783     100	GOOD	ArII
+  5145.308      70	GOOD	ArII
+  5162.285	15	GOOD	ArI
+  5187.746	20	GOOD	ArI
+  5495.874	25	GOOD	ArI
+  5558.702	25	GOOD	ArI
+  5606.733	35	GOOD	ArI
+  5650.704      20      GOOD	ArI
+  5875.6251	500	BLEND	HeI  # blended with 5875.97
+  5888.584      25      GOOD    ArI
+  5912.085      50      GOOD    ArI
+  6032.127	70	GOOD	ArI
+  6043.223      35      GOOD	ArI
+  6052.723 	10	GOOD	ArI      
+  6059.372      20      GOOD	ArI
+  6105.635 	10	GOOD	ArI      
+  6114.923     100      GOOD	ArII
+  6145.441 	10	GOOD	ArI      
+  6172.278     150      GOOD	ArII
+  6173.096 	10	GOOD	ArI      
+  6212.503 	10	GOOD	ArI      
+  6243.120 	25	GOOD	ArII     
+  6307.657 	15	GOOD	ArI      
+  6384.717 	20	GOOD	ArI      
+  6416.307	70	GOOD	ArI
+  6483.083	25	GOOD	ArII
+  6538.112 	15	GOOD	ArI      
+  6604.853 	15	GOOD	ArI      
+  6638.220 	25	GOOD	ArII     
+  6639.740 	20	GOOD	ArII     
+  6643.698	50	GOOD	ArII
+  6666.359 	25	GOOD	ArII     
+  6677.282      100     GOOD    ArI
+  6678.1517     100     GOOD    HeI
+  6684.293 	35	GOOD	ArII     
+  6752.834	150	GOOD	ArI
+  6766.611 	15	GOOD	ArI      
+  6861.269 	20	GOOD	ArII     
+  6871.289	150	GOOD	ArI
+  6888.174 	10	GOOD	ArI      
+  6937.664	50	GOOD	ArI
+  6965.431	10000	GOOD	ArI
+  7065.179      200	GOOD	HeI
+  7065.710      30	GOOD	HeI
+  7030.251     150	GOOD	ArI      
+  7067.217   10000	GOOD	ArI      
+  7068.735     100	GOOD	ArI      
+  7107.477 	25	GOOD	ArI      
+  7125.820 	25	GOOD	ArI      
+  7147.041    1000	GOOD	ArI      
+  7158.839 	15	GOOD	ArI      
+  7206.980 	70	GOOD	ArI      
+  7265.172 	15	GOOD	ArI      
+  7272.935    2000	GOOD	ArI      
+  7281.351      50	GOOD	HeI
+  7311.716 	35	GOOD	ArI      
+  7316.005 	25	GOOD	ArI      
+  7353.293 	70	GOOD	ArI      
+  7372.117     200	GOOD	ArI      
+  7380.423 	20	GOOD	ArII     
+  7383.980   10000	GOOD	ArI      
+  7392.980 	20	GOOD	ArI      
+  7412.337 	15	GOOD	ArI      
+  7425.294 	10	GOOD	ArI      
+  7435.368 	25	GOOD	ArI      
+  7436.297 	10	GOOD	ArI      
+  7503.868   20000	GOOD	ArI      
+  7514.651   15000	GOOD	ArI      
+  7635.105   25000	GOOD	ArI      
+  7723.760   15000	GOOD	ArI      
+  7724.207   10000	GOOD	ArI      
+  7891.075 	10	GOOD	ArI      
+  7948.176   20000	GOOD	ArI      
+  8006.156   20000	GOOD	ArI      
+  8014.785   25000	GOOD	ArI      
+  8103.692   20000	GOOD	ArI      
+  8115.311   35000	GOOD	ArI      
+  8264.521   10000	GOOD	ArI      
+  8392.27  	20	GOOD	ArI      
+  8408.209   15000	GOOD	ArI      
+  8424.647   20000	GOOD	ArI      
+  8521.441   15000	GOOD	ArI      
+  8667.943    4500	GOOD	ArI      
+  8771.860 	20	GOOD	ArII     
+  8849.91      180	GOOD	ArI      
+  9075.395 	20	GOOD	ArI      
+  9122.967   35000	GOOD	ArI      
+  9194.638     550	GOOD	ArI      
+  9224.498   15000	GOOD	ArI      
+  9291.532     400	GOOD	ArI      
+  9354.218    1600	GOOD	ArI      
+  9657.786   25000	GOOD	ArI      
+  9784.502    4500	GOOD	ArI      

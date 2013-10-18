@@ -1,0 +1,19 @@
+J. Moustakas
+University of Arizona
+
+jm05apr14uofa
+-------------
+
+Spectra renamed.  Information table converted to sextractor format and
+updated.
+
+jm04dec13uofa
+-------------
+
+Oke & Gunn 1983, ApJ 266,713 spectrophotometric standard stars
+downloaded from
+
+http://www.ing.iac.es/Astronomy/observing/manuals/html_manuals/tech_notes/tn065-100/workflux.html
+
+Spectra are in units of Angstroms and AB magnitude, in bandpasses of
+width 40 Angstroms.

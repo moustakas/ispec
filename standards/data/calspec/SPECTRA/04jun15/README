@@ -1,0 +1,144 @@
+------------------------------------------------------------------------
+
+
+  CALSPEC
+
+------------------------------------------------------------------------
+
+*CALSPEC:* 2004 June 15
+
+CALSPEC contains the composite stellar spectra that are the fundamental
+flux standards for HST calibrations. All files are in machine
+independent binary FITS table format. Information about the pedigree of
+a given spectrum is in the header of the FITS table file, which can be
+read with the IRAF hedit task or by mrdfits.pro in IDL.
+
+The Table below summarizes the set of recommended standard star spectra.
+Columns 2 and 3 give the V and B magnitudes of the stars. More
+documentation on these stars, eg. coordinates, finding charts and
+spectral types can be found in Turnshek et al. (1990), Bohlin, Colina &
+Finley (1995), and Colina & Bohlin (1997). Column 4 is the computer
+compatible file name with the plus and minus signs converted to
+underscores. Thus, the actual CALSPEC file name is the prefix in column
+4, plus one of the suffixes in columns 5-8, plus ".fits". For example, a
+standard that has STIS data is "bd_28d4211_stis_001.fits".
+
+The pure hydrogen WD model LTE spectra of Bohlin (2000) are now Hubeny
+NLTE models calculated with his Tlusty code (Bohlin 2003). These
+fundamental primary standards GD71, GD153, and G191B2B are listed by
+Calibration Data Base System (CDBS) suffix in column 5 of the Table and
+provide the basis for the secondary flux standards. The observational
+spectra from columns 6-8 can be compared with the models; and in the
+case of G191B2B, there is ultraviolet line blanketing at the ~1 percent
+level. The model calculations extend to 30 microns and cover the long
+wavelength limits of 2.7 microns for NICMOS, 1.1 microns for STIS and
+ACS, and 27 microns for JWST. Vega was observed by STIS (Bohlin &
+Gilliland 2004a); and the new composite flux standard
+alpha_lyr_stis_002.fits consists of IUE data from 1256-1675A, STIS CCD
+fluxes from 1675-4200A, and a specially tailored Kurucz model longward
+of 4200A (Kurucz 2003) and from 900-1256A. The STIS and ACS observations
+of the SDSS standard BD+17d4708 are documented in Bohlin & Gilliland
+(2004b).
+
+Column 6 lists the 20 CDBS suffix names for the second choice standard
+stars with STIS data from Bohlin, Dickinson, & Calzetti (2001).
+Tabulated in column 7 are the next best standard star flux
+distributions, which are composed of FOS spectra in the UV and Oke
+spectra at the longer wavelengths. Also appearing in column 7 are the
+three solar analogs that are comprised of FOS observation but do not
+have "_FOS" in the CALSPEC file name.
+
+The names for the last, but largest, set of standard stars appear in
+column 8 of the Table. The application of corrections to the original
+IUE and optical fluxes produces a consistent set of spectrophotometric
+standards from 1150 to 9200A (Bohlin 1996 and references therein). This
+set of standards is composed of IUE+Oke data only.
+
+CALSPEC also contains the ultraviolet to near-infrared absolute flux
+distribution of the Sun (filename: sun_reference_stis_001.fits) to 2.7
+microns, which is used to model the IR spectrum of the three solar
+analog stars. The solar reference spectrum combines absolute flux
+measurements from satellites and from the ground with a model spectrum
+for the near-infrared (Colina, Bohlin, & Castelli 1996).
+
+The order of preference for the choice of a standard flux distribution
+is from left to right in the Table, i.e. from the best in column 5 to
+the last choice with the lowest quality in column 8.
+
+CDBS Files of the Flux Standards with Columns in Order of Preference(1)
+-------------------------------------------------------------------------------
+Star name      V     B-V    CDBS name   Model       STIS      FOS+Oke  IUE+Oke
+  (1)         (2)    (3)       (4)       (5)         (6)        (7)      (8)
+
+AGK+81D266   11.94  -0.34  AGK_81D266             _STIS_001              _005
+ALPHA-LYR     0.03   0.00  ALPHA_LYR              _STIS_002              _004
+BD+17D4708    9.47   0.44  BD_17D4708             _STIS_001
+BD+25D4655    9.69  -0.31  BD_25D4655                                    _002
+BD+28D4211   10.51  -0.34  BD_28D4211             _STIS_001   _FOS_003   _005
+BD+33D2642   10.83  -0.17  BD_33D2642                         _FOS_003   _004 
+BD+75D325     9.55  -0.33  BD_75D325              _STIS_001   _FOS_003   _005 
+FEIGE110     11.83  -0.30  FEIGE110               _STIS_001              _005  
+FEIGE34      11.18  -0.34  FEIGE34                _STIS_001              _005 
+FEIGE66      10.51  -0.29  FEIGE66                                       _002
+FEIGE67      11.82  -0.34  FEIGE67                                       _002
+G191B2B      11.77  -0.33  G191B2B     _MOD_004   _STIS_001   _FOS_003   _005   
+G93-48       12.74  -0.01  G93_48                                        _004  
+GD108        13.56  -0.22  GD108                                         _005
+GD153        13.35  -0.29  GD153       _MOD_004   _STIS_001   _FOS_003
+GD50         14.06  -0.28  GD50                                          _004
+GD71         13.03  -0.25  GD71        _MOD_005   _STIS_001   _FOS_003
+GRW+70D5824  12.77  -0.09  GRW_70D5824            _STIS_001              _005
+HD93521       6.99  -0.27  HD93521                _STIS_001              _005
+HZ21         14.69  -0.33  HZ21                   _STIS_001              _005
+HZ2          13.88  -0.09  HZ2                                           _005
+HZ43         12.91  -0.31  HZ43        _MOD_004   _STIS_001   _FOS_003
+HZ43B        14.30   ...   HZ43B                  _STIS_001
+HZ44         11.67  -0.29  HZ44                   _STIS_001   _FOS_003   _005
+HZ4          14.51  +0.09  HZ4                    _STIS_001              _004
+LB227        15.32  +0.06  LB227                                         _004
+LDS749B      14.68  -0.04  LDS749B                                       _005
+LTT9491      14.10  +0.03  LTT9491                                       _002
+NGC7293      13.53  -0.37  NGC7293                                       _005
+
+P041C        12.00   0.62  P041C                  _STIS_001   _001
+P177D        13.47   0.66  P177D                  _STIS_001   _001
+P330E        13.00   0.64  P330E                  _STIS_001   _001
+SUN         -26.75   0.63  SUN_REFERENCE          _STIS_001
+
+(1) The unit of flux in all files is erg s^-1 cm^-2 A^-1 .
+
+SUPPLEMENTAL CALSPEC contains previous CALSPEC versions and
+spectrophotometry that may be useful for special purposes.
+
+PREVIOUS UPDATES: 96feb22, 99jul19, 01Jun5, 04Feb27
+
+REFERENCES
+
+Bohlin, R.C. 1996, AJ, 111, 1743
+Bohlin, R.C. 2000, AJ, 120, 437
+Bohlin, R. 2003, 2002 HST Calibration Workshop, ed. S. Arribas, A. Koekemoer,
+  & B. Whitmore, (Baltimore:STScI), p. 115
+Bohlin, R. C., & Gilliland, R. L. 2004a, AJ, 127, 3508
+Bohlin, R. C., & Gilliland, R. L. 2004b, AJ, submitted in June
+Bohlin, R.C., Colina, L., & Finley, D.S. 1995, AJ, 110, 1316
+Bohlin, R. C., Dickinson, M. E., & Calzetti, D. 2001, AJ, 122, 2118
+Colina, L., & Bohlin, R. 1994, AJ, 108, 1931
+Colina, L., & Bohlin, R. 1997, AJ, 113, 1138
+Colina, L., Bohlin, R.C., & Castelli, F. 1996, AJ, 112, 307
+Kurucz, R. 2003, http://kurucz.harvard.edu/
+Oke, J.B. 1990, AJ, 99, 1621
+Turnshek, D.A., Bohlin, R.C., Williamson, R., Lupie, O., Koornneef, J., & 
+  Morgan D. 1990, AJ, 99, 1243
+
+------------------------------------------------------------------------
+To the CALSPEC data <http://www.stsci.edu/ftp/cdbs/cdbs2/calspec>
+
+------------------------------------------------------------------------
+To the SUPPLEMENTAL CALSPEC data
+<http://www.stsci.edu/ftp/cdbs/cdbs2/supplemental_calspec>
+
+------------------------------------------------------------------------
+Back to the Astronomical Catalogs Page <astronomical_catalogs.html>
+
+/Last modified, June 15, 2004/
+

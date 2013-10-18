@@ -1,0 +1,47 @@
+pro write_oke_bandpasses
+; jm02oct4uofa
+; sum the Oke spectra in 50 Angstrom bandpasses and write out
+    
+    path = '/home/ioannis/idl/rkspec/standards/oke1990/SPECTRA/'
+    pushd, path
+
+    flist = findfile('*.dat',count=fcount)
+
+    bandstart = 3225.0
+    bandend = 9200.0
+    binsize = 50.0
+
+    nbins = long((bandend-bandstart)/binsize)
+    bandwave = findgen(nbins)*binsize+bandstart ;+binsize/2.0
+
+    finerpix = 10.0 ; oversampling factor
+
+    starflux = fltarr(nbins)
+    
+    for i = 0L, fcount-1L do begin
+
+       readcol, flist[i], stdwave, stdmag, /silent
+       stdflux = 10D^(-0.4*(stdmag+48.59D)) * 2.99793D18 / stdwave / stdwave ; [erg/s/cm^2/A]
+       
+       for j = 0L, nbins-1L do begin
+       
+          wavearray = bandstart + j*binsize - binsize/2.0 + findgen(binsize*finerpix)/finerpix + 1.0/finerpix/2.0
+          binflux = interpol(stdflux,stdwave,wavearray)
+          starflux[j] = total(binflux)/binsize/finerpix
+
+       endfor
+
+       starmag = -2.5 * alog10(bandwave * bandwave * starflux / 2.99793D18) - 48.59
+
+       openw, lun, '../'+flist[i], /get_lun
+       for k = 0L, nbins-1L do printf, lun, bandwave[k], starmag[k], binsize, $
+         format='(F7.1,5x,F6.2,5x,F5.1)'
+       free_lun, lun
+
+;      plot, bandwave, starflux, ps=4, xsty=3, ysty=3, xrange=[4000,5000]
+;      oplot, stdwave, stdflux
+       
+    endfor       
+
+return
+end    

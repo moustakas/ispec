@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "DTD/xhtml1-transitional.dtd">
+
+<html>
+  <head>
+    <title>MIPS/UA Instrument Team DAT</title>
+  </head>
+
+  <body>
+    <h1>MIPS/UA Instrument Team DAT (Data Analysis Tool aka Pipeline)</h1>
+
+    <p>The purpose of this pipeline is to provide the MIPS Instrument
+    Team with the ability to test reduction algorithms and analyze
+    data taken to characterize the instrument.  The pipeline will also
+    serve as a validation of the MIPS/SSC pipeline (i.e. both should
+    get the same results!).</p>
+
+    <em>Main Contact: </em><a
+    href="http://dirty.as.arizona.edu/~kgordon/">Karl Gordon</a> (<a
+    href="mailto:kgordon@as.arizona.edu">kgordon@as.arizona.edu</a>)<br />
+
+    <em>Other Responsible Parties:</em> 
+    <a href="mailto:jamesm@as.arizona.edu">James Muzerolle</a> (24 micron), 
+    <a href="mailto:kmisselt@as.arizona.edu">Karl Misselt</a> (mips_caler), 
+    <a href="mailto:jmorrison@as.arizona.edu">Jane Morrison</a> (mips_enhancer), 
+    <a href="mailto:chad@as.arizona.edu">Chad Engelbracht</a> (mips_simulator), 
+    <a href="mailto:mblaylock@as.arizona.edu">Myra Blaylock</a> (DAT documentation),
+    <a href="mailto:stansber@as.arizona.edu">John Stansberry</a>.<br />
+
+    <p>The pipeline is coded in C++.  It is/will be composed of three parts:</p>
+    <ol>
+      <li>mips_sloper - This takes the raw charge ramps and produces
+      the measured DN/sec.  Reads which saturate, have resets, or
+      cosmic rays are flagged and not used.  The electronic
+      nonlinearities and stim flash latents are taken out of the data as well.
+      </li>
+      <li>mips_caler - This takes the images produced by mips_sloper
+      and produces relatively calibrated images.  The processing can
+      include removing a dark image and flat fielding. </li>
+      <li>mips_enhancer - This takes the calibrated images produced by
+      mips_caler and uses the redundancy in the observations to remove
+      more instrumental affects.</li>
+      <li>mips_simulator - This takes an AOR file and user supplied FITS file
+      and produces simulated MIPS data.  </li>
+    </ol>
+
+    <p><font color="blue">DAT <a href="http://mips.as.arizona.edu/MIPS/DAT/">Documentation</a>
+    exists!</font></p>
+
+
+    <p>
+      The DAT is distributed as both source code and compiled programs.  Feel free to 
+      download either and use.  <font color="red">READ the README file in the
+	distribution!</font>
+    </p>
+
+    <table border="1" cellpadding="2" frame="2">
+      <tbody>
+	<tr><th>File</th><th>Description</th><th>Version</th><th>Date</th></tr>
+	<tr><td><a href="Pipeline/mips_dat_v1-71.tar.gz">mips_dat_v1-71.tar.gz</a></td>
+	  <td>Source</td><td>1-71</td><td>26 Nov 2002</td></tr>
+	<tr><td><a href="Pipeline/mips_dat_v1-71.redhat7.3.tar.gz">mips_dat_v1-71.redhat7.3.tar.gz</a></td>
+	  <td>Compiled, Redhat 7.3/g++ 2.96</td><td>1-71</td><td>14 Jan 2003</td></tr>
+	<tr><td><a href="Pipeline/mips_dat_v1-71.mandrake9.0.tar.gz">mips_dat_v1-71.mandrake9.0.tar.gz</a></td>
+	  <td>Compiled, Mandrake 9.0/g++ 3.2</td><td>1-71</td><td>14 Jan 2003</td></tr>
+	<tr><td><a href="Pipeline/mips_dat_v1-71.solaris8.tar.gz">mips_dat_v1-71.solaris8.tar.gz</a></td>
+	  <td>Compiled, Solaris 8/g++ 3.2</td><td>1-71</td><td>14 Jan 2003</td></tr>
+	<tr><td><a href="Pipeline/mips_dat_v1-71dev3.tar.gz">mips_dat_v1-71dev3.tar.gz</a></td>
+	  <td>Source, developers only</td><td>1-71dev3</td><td>Nov 2002</td></tr>
+	<tr><td><a href="mips_pipeline_history">History</a></td>
+	  <td>Source</td><td>1 to 1.71</td><td>14 Jan 2003</td></tr>
+      </tbody>
+    </table>
+
+
+
+    <p>If you have problems compiling the pipeline, there are two
+    possible problems.  First, you might run the 'configure' script in
+    the lib/CFitsIO subdirectory, type make clean_all in the main
+    'DAT' directory, and then 'make'.  Second, it might be that your
+    machine has an older version of the GNU C++ compiler.  You can get
+    the latest version at <a
+    href="http://www.gnu.org/software/gcc/gcc.html">GCC site</a>.  
+    It
+    should be noted that the development of the DAT is currently being
+    done using version 2.96 <font color=red>and</font> 3.2 of GCC.  To 
+    compile and install the new
+    C++ compiler, follow the instructions which come with the
+    compiler.</p>
+
+    <p>You can view an <a href="mips_cal_example.html">example</a> of
+    how the 70 micron data is currently processed/calibrated.  Note:
+    this is only how the current pipeline handles the 70 and 160
+    micron data, more needs to be added to the pipeline to fully
+    calibrate the Ge:Ga data.  Also, the 24 micron data is handled in
+    the pipeline at a very basic level - wait for a newer version or
+    contact Karl Gordon before using the pipeline on 24 micron
+    data.</p>
+
+    <p><font color="red">SOLARIS users - READ THIS!</font><br />
+    The DAT will now compile under solaris, but two additional steps
+    are required.  First, you must type 'make new_dist' in the main
+    DAT directory.  Second, you must edit the Makefile in the src_ms, 
+    src_mc, and src_me
+    directories, comment out the linux LDFLAGS variable, and uncomment
+    the solaris LDFLAGS variable.  Running make in the DAT directory
+    after these two steps should result in success.  If not, email me
+    with the errors.
+    </p>
+
+    <p><font color="red">MAC OSX users - READ THIS!</font><br />
+    The DAT will now compile under MAC OSX, but one additional step is
+    required.  You must type 'make new_dist' in the main DAT
+    directory.  Running make in the DAT directory after this step
+    should result in success.  If not, email me with the errors.
+    </p>
+
+    <hr />
+<p>
+<a href="http://validator.w3.org/check/referer">
+<img style="border:0;width:88px;height:31px"
+src="../valid-xhtml10.png" alt="Valid XHTML 1.0!" /></a>
+
+<a href="kgordon.html">Karl D. Gordon</a>
+</p>
+  </body>
+</html>

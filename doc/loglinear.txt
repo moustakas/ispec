@@ -1,0 +1,42 @@
+; resample the spectra such that the pixels are evenly-spaced in log-lambda
+
+       coeff0 = alog10(minwave)
+;      coeff1 = (alog10(maxwave)-alog10(minwave))/(naxis-1)
+       coeff1 = 1D-4            ; 1.00 Angstrom per pixel dispersion = 69 km/s
+
+       newaxis = fix(1.0D + (alog10(maxwave)-alog10(minwave))/coeff1) 
+       newloglam = coeff0 + coeff1*findgen(newaxis) ; output wavelength vector [A]
+
+       starflux = fltarr(newaxis,nstar)
+
+       for k = 0L, nstar-1L do begin
+    
+          objflux = jhc[match[k]].flux
+          objivar = replicate(1.0,naxis)
+          logwave = alog10(jhc[match[k]].wave)
+
+          combine1fiber, logwave, objflux, objivar, newloglam=newloglam, $
+            newflux=newflux, newivar=newivar, binsz=binsz, nord=nord, $
+            bkptbin=bkptbin, maxsep=maxsep
+          
+          starflux[*,k] = newflux ; / mean(newflux) ; normalize to the mean
+
+       endfor
+
+       starwave = 10.0^newloglam
+
+       mkhdr, header, starflux
+       sxdelpar, header, 'DATE'
+       sxaddpar, header, 'OBJECT', 'STAR'
+       sxaddpar, header, 'COEFF0', coeff0
+       sxaddpar, header, 'COEFF1', coeff1
+       for j = 0L, nstar-1L do $
+         sxaddpar, header, 'NAME'+strn(j), strn(jhc[match[j]].sp_type)
+        
+; compute the dispersion across the whole spectrum
+
+;   disp = fltarr(naxis-1)
+;   for k = 0L, naxis-2L do disp[k] = 10^logwave[k+1]-10^logwave[k]
+;   plot, logwave[0:naxis-2L], disp, xsty=3, ysty=3, ps=3
+;   djs_iterstat, disp, mean=dmean, median=dmedian, sigma=dsigma
+

@@ -1,0 +1,7 @@
+#     NAME    WAVELENGTH    ZINDEX       WINDEX     FINDEX    FVALUE   BLEND
+#  H6          3889.049    zabsorption	w_balmer     f3889     -1.0   good3889
+#  H_epsilon   3970.072    zabsorption	w_balmer     f3970     -1.0   good3970
+   H_delta     4101.734    zabsorption	w_balmer     f4101     -1.0   good4101
+   H_gamma     4340.464    zabsorption	w_balmer     f4340     -1.0   good4340
+   H_beta      4861.325    zabsorption	w_balmer     f4861     -1.0   blend4861
+   H_alpha     6562.80     zabsorption	w_balmer     f6563     -1.0   blend6563

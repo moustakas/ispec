@@ -1,0 +1,227 @@
+function init_region_struct, ndata
+; initialize the data structure
+    
+    data = {$
+      oii_h_alpha:  0.0, $
+      oii_h_beta:   0.0, $
+      oiii_h_alpha: 0.0, $
+      oiii_h_beta:  0.0, $
+      nii_h_alpha:  0.0, $
+      nii_h_beta:   0.0, $
+      sii_h_alpha:  0.0, $
+      sii_h_beta:   0.0, $
+      siii_h_alpha: 0.0, $
+      siii_h_beta:  0.0, $
+      oi_h_alpha:   0.0, $
+      oi_h_beta:    0.0, $
+      oii_oiii:     0.0, $
+      oiii_oii:     0.0, $
+      nii_oii:      0.0, $
+      nii_sii:      0.0, $
+      sii_nii:      0.0, $
+      sii_oii:      0.0, $
+      oiii_nii:     0.0, $
+      nii_oiii:     0.0, $
+      oi_oiii:      0.0, $
+      R23:          0.0, $
+      metallicity:  0.0}
+    data = replicate(data,ndata)
+
+return, data
+end
+
+function form_ratios, data
+; construct useful line-ratios
+    
+    oratio = 2.984
+    ocor = 1+(1.0/oratio)
+
+    w1 = where(data.oiii_h_alpha gt 0.0,nw1)
+    w2 = where(data.oii_h_alpha gt 0.0, nw2)
+    w3 = where(data.sii_h_alpha gt 0.0, nw3)
+    w4 = where(data.nii_h_alpha gt 0.0, nw4)
+    w5 = where((data.oii_h_beta gt 0.0) and (data.oiii_h_beta gt 0.0),nw5)
+
+    if nw1 ne 0L then begin
+       data[w1].oii_oiii = data[w1].oii_h_alpha/data[w1].oiii_h_alpha ; [O II]/[O III]
+       data[w1].oi_oiii  = data[w1].oi_h_alpha /data[w1].oiii_h_alpha ; [O I]/[O III]
+       data[w1].nii_oiii = data[w1].nii_h_alpha/data[w1].oiii_h_alpha ; [O I]/[O III]
+    endif
+
+    if nw2 ne 0L then begin
+       data[w2].oiii_oii = data[w2].oiii_h_alpha/data[w2].oii_h_alpha ; [O III]/[O II]
+       data[w2].nii_oii  = data[w2].nii_h_alpha /data[w2].oii_h_alpha ; [N II]/[O II]
+       data[w2].sii_oii  = data[w2].sii_h_alpha /data[w2].oii_h_alpha ; [S II]/[O II]
+    endif
+
+    if nw3 ne 0L then data[w3].nii_sii  = data[w3].nii_h_alpha/data[w3].sii_h_alpha ; [N II]/[S II]
+
+    if nw4 ne 0L then begin
+       data[w4].sii_nii  = data[w4].sii_h_alpha /data[w4].nii_h_alpha ; [S II]/[N II]
+       data[w4].oiii_nii = data[w4].oiii_h_alpha/data[w4].nii_h_alpha ; [O III]/[N II]
+    endif
+    
+    if nw5 ne 0L then data[w5].R23  = data[w5].oii_h_beta + data[w5].oiii_h_beta*ocor ; R23
+
+return, data
+end
+
+function take_log, data
+
+    tags = tag_names(data)
+    ntags = n_elements(tags)
+
+    for k = 0L, ntags-1L do begin
+
+       good = where(data.(k) gt 0.0,ngood,comp=bad,ncomp=nbad)
+       if ngood ne 0L then data[good].(k) = alog10(data[good].(k))
+       if nbad ne 0L then data[bad].(k) = -999.0
+
+    endfor
+       
+return, data    
+end
+
+function read_regions, all=all, m101=m101, vanzee=vanzee, zaritsky=zaritsky
+; jm02jul16uofa
+; jm03aug5uofa - major rewrite and updated with Zaritsky et al. (1994)
+    
+    path = atlas_path(/literature)+'HIIregions/'
+
+    if (n_elements(m101) eq 0L) and (n_elements(vanzee) eq 0L) and $
+      (n_elements(zaritsky) eq 0L) then all = 1
+    
+; in the output data structure we adopt the following definitions:
+
+; [N II]  = [N II] 6584
+; [O II]  = [O II] 3727
+; [O III] = [O III] 5007
+; [S II]  = [S II] 6716,31
+    
+;;; from Allen's Astrophysical Quantities, p. 80
+;;    
+;;    Nratio = 2.73E-3/9.20E-4 ; [NII]6584/[NII]6548 
+;;    Oratio = 1.81E-2/6.21E-3 ; [OIII]5007/[OIII]4959
+
+    nratio = 3.054
+    oratio = 2.984
+    
+    ncor = nratio/(1.0+nratio)
+    ocor = oratio/(1.0+oratio)
+    
+; ---------------------------------------------------------------------------
+; M101 from Kennicutt & Garnett (1996)
+; ---------------------------------------------------------------------------
+
+    if keyword_set(m101) or keyword_set(all) then begin
+    
+; reddening-corrected data; remove [O III] 4959 and [N II] 6548 contribution
+       
+       readcol, path+'M101.dat', /silent, comment='#', $
+         oii_h_beta, x, oiii_h_beta, x, x, x, R23, x, sii_h_alpha, x, $
+         siii_h_alpha, x, nii_h_alpha, x
+       nM101 = n_elements(oii_h_beta)
+
+; initialize the data structure
+
+       m101 = init_region_struct(nM101)
+       
+; line ratios relative to the Balmer lines.  no data on [O I]
+       
+       m101.oii_h_beta   = oii_h_beta        ; [O II]/Hb
+       m101.oii_h_alpha  = oii_h_beta/2.85   ; [O II]/Ha
+       m101.oiii_h_beta  = oiii_h_beta*ocor  ; [O III]/Hb 
+       m101.oiii_h_alpha = oiii_h_beta/2.85  ; [O III]/Ha
+       m101.nii_h_alpha  = nii_h_alpha*ncor  ; [N II]/Ha
+       m101.nii_h_beta   = nii_h_alpha*2.85  ; [N II]/Hb
+       m101.sii_h_alpha  = sii_h_alpha       ; [S II]/Ha
+       m101.sii_h_beta   = sii_h_alpha*2.85  ; [S II]/Hb
+       m101.siii_h_alpha = siii_h_alpha      ; [S III]/Ha
+       m101.siii_h_beta  = siii_h_alpha*2.85 ; [S III]/Hb
+       
+; construct other, useful line ratios, then take the log of the ratios 
+
+       m101 = form_ratios(m101)
+       m101 = take_log(m101)
+       
+       if (not keyword_set(all)) then return, m101
+
+    endif
+
+; ---------------------------------------------------------------------------
+; van Zee (1998) HII regions
+; ---------------------------------------------------------------------------
+
+    if keyword_set(vanzee) or keyword_set(all) then begin
+    
+; reddening-corrected data, relative to H-beta; remove [O III] 4959
+; and [N II] 6548 contribution
+
+       zee = mrdfits(path+'vanZee_table3.fits',1,/silent)
+;      zmetals = mrdfits(path+'vanZee_table5.fits',1,/silent)
+       zee = struct_trimtags(zee,select='_*')
+       nzee = n_elements(zee)
+
+; initialize the data structure
+
+       vanzee = init_region_struct(nzee)
+       
+; line ratios relative to the Balmer lines.  no data on [S III]
+
+       vanzee.oii_h_beta   = zee._oii_               ; [O II]/Hb
+       vanzee.oii_h_alpha  = vanzee.oii_h_beta/2.85  ; [O II]/Ha
+       vanzee.oiii_h_beta  = zee._oiii_*ocor         ; [O III]/Hb
+       vanzee.oiii_h_alpha = vanzee.oiii_h_beta/2.85 ; [O III]/Ha
+       vanzee.nii_h_beta   = zee._nii_*ncor          ; [N II]/Hb
+       vanzee.nii_h_alpha  = vanzee.nii_h_beta/2.85  ; [N II]/Ha
+       vanzee.sii_h_beta   = zee._sii_               ; [S II]/Hb
+       vanzee.sii_h_alpha  = vanzee.sii_h_beta/2.85  ; [S II]/Ha
+       vanzee.oi_h_beta    = zee._oi_                ; [O I]/Hb
+       vanzee.oi_h_alpha   = vanzee.oi_h_beta/2.85   ; [O I]/Ha
+       
+; construct other, useful line ratios, then take the log of the ratios 
+
+       vanzee = form_ratios(vanzee)
+       vanzee = take_log(vanzee)
+       
+       if (not keyword_set(all)) then return, vanzee
+
+    endif
+
+; ---------------------------------------------------------------------------
+; Zaritsky, Kennicutt, & Huchra (1994) HII regions
+; ---------------------------------------------------------------------------
+
+    if keyword_set(zaritsky) or keyword_set(all) then begin
+    
+; reddening-corrected data; remove [O III] 4959 contribution
+
+       readcol, path+'zaritsky94_table2.dat', /silent, skipline=4, $
+         galaxy, oii_h_beta, oiii_h_beta, format='A,F,F'
+       nz94 = n_elements(oii_h_beta)
+
+; initialize the data structure
+
+       z94 = init_region_struct(nz94)
+       
+; line ratios relative to the Balmer lines.  no data on [N II], 
+; [S II], [S III], or [O I]
+       
+       z94.oii_h_beta   = oii_h_beta        ; [O II]/Hb
+       z94.oii_h_alpha  = oii_h_beta/2.85   ; [O II]/Ha
+       z94.oiii_h_beta  = oiii_h_beta*ocor  ; [O III]/Hb 
+       z94.oiii_h_alpha = oiii_h_beta/2.85  ; [O III]/Ha
+
+; construct other, useful line ratios, then take the log of the ratios 
+
+       z94 = form_ratios(z94)
+       z94 = take_log(z94)
+       
+       if (not keyword_set(all)) then return, z94
+
+    endif
+
+    if keyword_set(all) then data = struct_append(struct_append(m101,vanzee),z94)
+
+return, data
+end

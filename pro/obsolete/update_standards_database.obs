@@ -1,0 +1,103 @@
+;+
+; NAME:
+;       UPDATE_STANDARDS_DATABASE
+;
+; PURPOSE:
+;       Update and verify the completeness of the standard star
+;       database.
+;
+; CALLING SEQUENCE:
+;       update_standards_database, silent=silent
+;
+; INPUTS:
+;       None.
+;
+; KEYWORD PARAMETERS:
+;       silent - do not print messages
+;
+; OUTPUTS:
+;       New table_info.fits files are written for each path in
+;       {ISPEC_DIR}/standards
+;
+; PROCEDURES USED:
+;       READCOL, SPLOG, NICEPRINT, MWRFITS
+;
+; EXAMPLE:
+;
+; MODIFICATION HISTORY:
+;       J. Moustakas, 2003 April 14, U of A, written, ISPEC v1.0.0
+;       jm04feb24uofa - added DELIMITER keyword to READCOL
+;       jm04mar20uofa - read the B- and V-band magnitude
+;-
+
+pro update_standards_database, silent=silent
+
+; read the list of supported directories
+    
+    rootpath = filepath('',root_dir=getenv('ISPEC_DIR'),subdirectory='standards')
+    pushd, rootpath
+
+    if file_test('SUPPORTED',/regular) eq 0B then begin
+       splog, 'File '+rootpath+'SUPPORTED not found!'
+       return
+    endif
+
+    readcol, 'SUPPORTED', path, format='A', comment='#', /silent
+    npath = n_elements(path)
+
+    if not keyword_set(silent) then begin
+       splog, 'Found '+strn(npath)+' supported databases:'
+       niceprint, path
+    endif
+
+    etcpath = filepath('',root_dir=getenv('ISPEC_DIR'),subdirectory='etc')
+
+    if file_test(etcpath+'starcolors.dat',/regular) eq 0B then begin
+       splog, 'File '+etcpath+'starcolors.dat not found!'
+       return
+    endif
+
+    splog, 'Reading '+etcpath+'starcolors.dat'
+    readcol, etcpath+'starcolors.dat', colorstar, color, format='A,A', /silent
+
+; generate binary fits files of all the table_info.dat files    
+    
+    template = create_struct('file', '', 'star', '', 'ra', 0D, 'dec', 0D, 'color', '', $
+      'B', 0.0, 'V', 0.0)
+    for i = 0L, npath-1L do begin
+
+       cd, path[i]
+       readcol, 'table_info.dat', file, star, ra, de, bmag, vmag, /silent, $
+         format='A,A,A,A,F,F', skipline=1, comment='#', delimiter=' '
+       nstar = n_elements(star)
+       table = replicate(template,nstar)
+
+       table.file = file
+       table.star = strcompress(star,/remove)
+       table.ra = 15.0*im_hms2dec(ra) ; decimal degrees
+       table.dec = im_hms2dec(de)
+       table.B = bmag
+       table.V = vmag
+
+       for j = 0L, nstar-1L do begin
+          match = where(strmatch(colorstar,table[j].star,/fold) eq 1B,nw)
+          if nw eq 0L then print, 'WARNING: '+table[j].star+' in '+$
+            path[i]+' has no assigned color in '+etcpath+'starcolors.dat!' else $
+          table[j].color = color[match]
+       endfor
+
+       struct_print, table
+       
+       if not keyword_set(silent) then begin
+          print & splog, 'Writing '+path[i]+'/table_info.fits' & print
+       endif
+       mwrfits, table, 'table_info.fits', /create ; write out
+       
+       cd, '..'
+       
+    endfor
+
+    popd
+       
+return
+end    

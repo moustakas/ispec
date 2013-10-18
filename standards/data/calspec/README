@@ -1,0 +1,53 @@
+J. Moustakas
+
+jm07jun20nyu
+------------
+
+The "missing" Calspec standards (see below) were found in Simbad and
+the database was updated to the latest (2006-Sep) distribution.  Note:
+P041C=GSPCP41-C, P177D=GSPCP177-D, P330E=GSPCP330E.  Also,
+WRITE_BINNED_STANDARDS was re-run with 48.6 as the AB magnitude
+zero-point.
+
+jm05jun01uofa
+-------------
+
+BV photometry was taken from
+http://kahuna.stsci.edu/instruments/observatory/cdbs/calspec.html.  I
+also decided to bin the standards in 10-Angstrom bandpasses.  Note
+that I adopt the AB-magnitude conversion:
+
+   m_AB = -2.5 log (f_nu)-48.6
+
+jm05apr14uofa
+-------------
+
+Calspec database updated with 2004-Jun-15 version spectra.  Added SDSS
+standard BD+174708.  Binned standards recomputed with
+WRITE_CALSPEC_BANDPASSES.  Information table converted to sextractor
+format and updated.
+
+jm03feb06uofa
+-------------
+
+Spectra are in units of Angstroms and AB magnitude, in bandpasses of
+width 50 Angstroms as written by WRITE_CALSPEC_BANDPASSES.
+
+The README in the subdirectory SPECTRA has more detailed information
+on the stars.  The star HZ43B was removed from the list of FITS
+spectra due to limited spectral coverage.  The following objects had
+uncertain coordinates in SIMBAD:
+
+GD108
+GD153
+GD50
+LTT9491
+
+The following objects could not be found in SIMBAD:
+
+P041C
+P177D
+P330E
+
+and were therefore not included.
+
